@@ -41,10 +41,12 @@ func TestLiveFeedFetch(t *testing.T) {
 func TestDoubleFetchDeduplication(t *testing.T) {
 	skill := newTestSkill(t)
 
-	url := "https://rss.arxiv.org/rss/cs.AI"
+	// Use HuggingFace blog - posts ~2x/week, stable, low volume
+	// This feed will genuinely return 0 new items on second fetch
+	url := "https://huggingface.co/blog/feed.xml"
 
 	feed := Feed{
-		Name:     "arXiv AI",
+		Name:     "HuggingFace Blog",
 		URL:      url,
 		Category: "research",
 		Tier:     1,
