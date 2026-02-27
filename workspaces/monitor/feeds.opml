@@ -1,0 +1,879 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head>
+    <title>Master Intelligence Feed — BD News + Global Tech/AI/Robotics/Defence (200 Companies)</title>
+    <dateCreated>Mon, 24 Feb 2026</dateCreated>
+    <dateModified>Mon, 24 Feb 2026 - Dead links removed, GNews alternatives added</dateModified>
+    <ownerName>News Intelligence Agent</ownerName>
+    <docs>http://opml.org/spec2.opml</docs>
+  </head>
+  <body>
+
+    <!-- ═══════════════════════════════════════════════════
+         🤖 AI / AGI GIANTS & FOUNDATION MODEL BUILDERS
+         ═══════════════════════════════════════════════════ -->
+    <outline text="🤖 AI / AGI Giants &amp; Foundation Models" title="AI Giants">
+
+      <outline text="OpenAI (GNews)" title="OpenAI News"
+        description="GPT, ChatGPT, AGI Research — native RSS removed, using GNews"
+        xmlUrl="https://news.google.com/rss/search?q=openai+GPT+ChatGPT+AGI+when:7d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        htmlUrl="https://openai.com" type="rss" />
+
+      <outline text="Anthropic (GNews)" title="Anthropic News"
+        description="Claude, AI Safety — native RSS removed, using GNews proxy"
+        xmlUrl="https://news.google.com/rss/search?q=anthropic+claude+AI+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        htmlUrl="https://www.anthropic.com" type="rss" />
+
+      <outline text="Google DeepMind" title="Google DeepMind"
+        description="Gemini, AlphaFold, AGI Research"
+        xmlUrl="https://deepmind.google/blog/rss.xml"
+        htmlUrl="https://deepmind.google" type="rss" />
+
+      <outline text="Google AI / Research Blog" title="Google AI Blog"
+        description="Google Research across all AI domains"
+        xmlUrl="https://blog.research.google/feeds/posts/default"
+        htmlUrl="https://blog.research.google" type="rss" />
+
+      <outline text="Google AI (blog.google)" title="Google AI News"
+        xmlUrl="https://blog.google/technology/ai/rss/"
+        htmlUrl="https://blog.google/technology/ai" type="rss" />
+
+      <outline text="Microsoft AI Blog" title="Microsoft AI"
+        description="Copilot, Azure AI, enterprise AI"
+        xmlUrl="https://blogs.microsoft.com/ai/feed/"
+        htmlUrl="https://blogs.microsoft.com/ai" type="rss" />
+
+      <outline text="Meta AI (GNews)" title="Meta AI News"
+        description="LLaMA, open source AI, research — native RSS removed"
+        xmlUrl="https://news.google.com/rss/search?q=meta+AI+LLaMA+research+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        htmlUrl="https://ai.meta.com" type="rss" />
+
+      <outline text="NVIDIA AI / Developer Blog" title="NVIDIA AI"
+        description="AI hardware, CUDA, model training"
+        xmlUrl="https://developer.nvidia.com/blog/feed"
+        htmlUrl="https://developer.nvidia.com/blog" type="rss" />
+
+      <outline text="NVIDIA Corporate Blog" title="NVIDIA Blog"
+        xmlUrl="https://blogs.nvidia.com/feed/"
+        htmlUrl="https://blogs.nvidia.com" type="rss" />
+
+      <outline text="AWS Machine Learning Blog" title="AWS ML"
+        description="Bedrock, SageMaker, Titan"
+        xmlUrl="https://aws.amazon.com/blogs/machine-learning/feed/"
+        htmlUrl="https://aws.amazon.com/blogs/machine-learning" type="rss" />
+
+      <outline text="IBM Research Blog" title="IBM AI"
+        description="Watson, enterprise AI"
+        xmlUrl="https://research.ibm.com/blog/rss.xml"
+        htmlUrl="https://research.ibm.com/blog" type="rss" />
+
+      <outline text="Mistral AI (GNews)" title="Mistral AI News"
+        description="Open-weight LLMs (France) — native RSS removed"
+        xmlUrl="https://news.google.com/rss/search?q=mistral+AI+LLM+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        htmlUrl="https://mistral.ai" type="rss" />
+
+      <outline text="Cohere (GNews)" title="Cohere"
+        description="Enterprise LLMs, RAG — native RSS may be blocked"
+        xmlUrl="https://news.google.com/rss/search?q=cohere+AI+LLM+enterprise+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        htmlUrl="https://cohere.com/blog" type="rss" />
+
+      <outline text="Stability AI (GNews)" title="Stability AI News"
+        description="Stable Diffusion, generative media — native RSS removed"
+        xmlUrl="https://news.google.com/rss/search?q=stability+AI+stable+diffusion+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        htmlUrl="https://stability.ai" type="rss" />
+
+      <outline text="Hugging Face Blog" title="Hugging Face"
+        description="ML platform, Transformers library, open models"
+        xmlUrl="https://huggingface.co/blog/feed.xml"
+        htmlUrl="https://huggingface.co/blog" type="rss" />
+
+    </outline>
+
+
+    <!-- ═══════════════════════════════════════════════════
+         🦄 AI STARTUPS & UNICORNS
+         ═══════════════════════════════════════════════════ -->
+    <outline text="🦄 AI Startups &amp; Unicorns" title="AI Unicorns">
+
+      <outline text="Databricks (GNews)" title="Databricks News"
+        description="$62B — Data + AI Platform — native RSS removed"
+        xmlUrl="https://news.google.com/rss/search?q=databricks+spark+ray+AI+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        htmlUrl="https://www.databricks.com" type="rss" />
+
+      <outline text="Scale AI (GNews)" title="Scale AI News"
+        description="$14B — Data Labeling for AI — native RSS removed"
+        xmlUrl="https://news.google.com/rss/search?q=scale+AI+data+labeling+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        htmlUrl="https://scale.com" type="rss" />
+
+      <outline text="Jasper (GNews)" title="Jasper AI News"
+        description="$1.5B — Content AI — native RSS removed"
+        xmlUrl="https://news.google.com/rss/search?q=jasper+AI+content+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        htmlUrl="https://www.jasper.ai" type="rss" />
+
+      <outline text="Recursion (GNews)" title="Recursion News"
+        description="Drug Discovery AI (Public) — native RSS removed"
+        xmlUrl="https://news.google.com/rss/search?q=recursion+pharmaceuticals+AI+drug+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        htmlUrl="https://www.recursion.com" type="rss" />
+
+      <!-- REMOVED: Anyscale (company acquired/shut down in late 2024) -->
+
+      <outline text="Adept AI (GNews)" title="Adept AI News"
+        description="AI agents and automation — native RSS removed"
+        xmlUrl="https://news.google.com/rss/search?q=adept+AI+automation+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        htmlUrl="https://www.adept.ai" type="rss" />
+
+      <outline text="Thinking Machines Lab (GNews)" title="Thinking Machines Lab"
+        description="AI startup (formerly Thinking Machine Labs) — native RSS removed"
+        xmlUrl="https://news.google.com/rss/search?q=%22thinking+machines+lab%22+OR+%22thinking+machine%22+AI+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        htmlUrl="https://thinkingmachines.ai" type="rss" />
+
+      <outline text="Cursor (Anysphere) (GNews)" title="Cursor AI"
+        description="AI-powered code editor — no native RSS available"
+        xmlUrl="https://news.google.com/rss/search?q=cursor+AI+code+editor+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        htmlUrl="https://cursor.sh" type="rss" />
+
+      <!-- No RSS — using GNews proxy for major unicorns -->
+      <outline text="Perplexity AI (GNews)" title="Perplexity AI News"
+        description="$9B — AI Search. No native RSS — GNews proxy."
+        xmlUrl="https://news.google.com/rss/search?q=perplexity+AI+news+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        htmlUrl="https://www.perplexity.ai" type="rss" />
+
+      <outline text="Figure AI (GNews)" title="Figure AI News"
+        description="$39B — Humanoid Robots. No native RSS."
+        xmlUrl="https://news.google.com/rss/search?q=%22figure+AI%22+robot+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        htmlUrl="https://www.figure.ai" type="rss" />
+
+      <outline text="Anduril Industries (GNews)" title="Anduril News"
+        description="Defense AI/Autonomy — no native RSS."
+        xmlUrl="https://news.google.com/rss/search?q=anduril+industries+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        htmlUrl="https://www.anduril.com" type="rss" />
+
+    </outline>
+
+
+    <!-- ═══════════════════════════════════════════════════
+         🤖 ROBOTICS COMPANIES
+         ═══════════════════════════════════════════════════ -->
+    <outline text="🤖 Robotics" title="Robotics">
+
+      <outline text="Boston Dynamics Blog" title="Boston Dynamics"
+        description="Spot, Atlas, humanoid/quadruped robots"
+        xmlUrl="https://www.bostondynamics.com/feed"
+        htmlUrl="https://www.bostondynamics.com" type="rss" />
+
+      <outline text="ABB Robotics (GNews)" title="ABB Robotics News"
+        description="Industrial robotics and automation — native RSS timeout"
+        xmlUrl="https://news.google.com/rss/search?q=ABB+robotics+automation+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        htmlUrl="https://new.abb.com" type="rss" />
+
+      <outline text="Universal Robots (GNews)" title="Universal Robots News"
+        description="Collaborative robots (cobots) — native RSS may be blocked"
+        xmlUrl="https://news.google.com/rss/search?q=%22universal+robots%22+cobot+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        htmlUrl="https://www.universal-robots.com" type="rss" />
+
+      <outline text="Foxglove Dev Blog" title="Foxglove"
+        description="Robot development tools and visualization"
+        xmlUrl="https://foxglove.dev/blog/rss.xml"
+        htmlUrl="https://foxglove.dev/blog" type="rss" />
+
+      <outline text="The Robot Report" title="The Robot Report"
+        description="Industry-wide robotics news and analysis"
+        xmlUrl="https://www.therobotreport.com/feed/"
+        htmlUrl="https://www.therobotreport.com" type="rss" />
+
+      <outline text="IEEE Spectrum — Robotics" title="IEEE Robotics"
+        xmlUrl="https://spectrum.ieee.org/feeds/topic/robotics.rss"
+        htmlUrl="https://spectrum.ieee.org" type="rss" />
+
+      <!-- GNews proxies for high-value robotics companies without RSS -->
+      <outline text="Tesla Optimus / Robot (GNews)" title="Tesla Optimus News"
+        xmlUrl="https://news.google.com/rss/search?q=tesla+optimus+robot+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        type="rss" />
+
+      <outline text="Agility Robotics — Digit (GNews)" title="Agility Robotics News"
+        xmlUrl="https://news.google.com/rss/search?q=%22agility+robotics%22+OR+%22digit+robot%22+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        type="rss" />
+
+      <outline text="Apptronik (GNews)" title="Apptronik News"
+        xmlUrl="https://news.google.com/rss/search?q=apptronik+humanoid+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        type="rss" />
+
+      <outline text="Sanctuary AI (GNews)" title="Sanctuary AI News"
+        xmlUrl="https://news.google.com/rss/search?q=%22sanctuary+AI%22+robot+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        type="rss" />
+
+      <outline text="1X Robotics (GNews)" title="1X Robotics News"
+        xmlUrl="https://news.google.com/rss/search?q=%221X+robotics%22+OR+%22halodi%22+humanoid+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        type="rss" />
+
+    </outline>
+
+
+    <!-- ═══════════════════════════════════════════════════
+         👁️ COMPUTER VISION
+         ═══════════════════════════════════════════════════ -->
+    <outline text="👁️ Computer Vision" title="Computer Vision">
+
+      <outline text="Clarifai (GNews)" title="Clarifai"
+        description="Vision AI platform — native RSS may be blocked"
+        xmlUrl="https://news.google.com/rss/search?q=clarifai+computer+vision+AI+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        htmlUrl="https://www.clarifai.com/blog" type="rss" />
+
+      <outline text="Labelbox (GNews)" title="Labelbox News"
+        description="Data labeling platform — native RSS removed"
+        xmlUrl="https://news.google.com/rss/search?q=labelbox+data+labeling+AI+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        htmlUrl="https://labelbox.com" type="rss" />
+
+      <outline text="Roboflow Blog" title="Roboflow"
+        description="Computer vision developer tools"
+        xmlUrl="https://blog.roboflow.com/rss/"
+        htmlUrl="https://blog.roboflow.com" type="rss" />
+
+      <outline text="Viso.ai (GNews)" title="Viso.ai News"
+        description="Enterprise computer vision platform — native RSS removed"
+        xmlUrl="https://news.google.com/rss/search?q=viso.ai+computer+vision+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        htmlUrl="https://viso.ai" type="rss" />
+
+      <outline text="arXiv — Computer Vision (cs.CV)" title="arXiv CV"
+        description="Latest CV/vision research preprints"
+        xmlUrl="https://rss.arxiv.org/rss/cs.CV"
+        htmlUrl="https://arxiv.org/list/cs.CV/recent" type="rss" />
+
+      <!-- GNews for major CV players -->
+      <outline text="SenseTime (GNews)" title="SenseTime News"
+        xmlUrl="https://news.google.com/rss/search?q=sensetime+AI+vision+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        type="rss" />
+
+      <outline text="Matterport (GNews)" title="Matterport News"
+        xmlUrl="https://news.google.com/rss/search?q=matterport+3D+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        type="rss" />
+
+    </outline>
+
+
+    <!-- ═══════════════════════════════════════════════════
+         ⚔️ AI DEFENSE & SECURITY
+         ═══════════════════════════════════════════════════ -->
+    <outline text="⚔️ AI Defence &amp; Security" title="AI Defence">
+
+      <outline text="Palantir Blog" title="Palantir"
+        description="Data analytics and defense AI"
+        xmlUrl="https://blog.palantir.com/feed"
+        htmlUrl="https://blog.palantir.com" type="rss" />
+
+      <outline text="Lockheed Martin News" title="Lockheed Martin"
+        description="Defense AI, F-35, hypersonics"
+        xmlUrl="https://news.lockheedmartin.com/rss"
+        htmlUrl="https://news.lockheedmartin.com" type="rss" />
+
+      <!-- GNews proxies for defense AI companies without RSS -->
+      <outline text="Anduril Industries (GNews)" title="Anduril"
+        xmlUrl="https://news.google.com/rss/search?q=anduril+defense+AI+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        type="rss" />
+
+      <outline text="Shield AI (GNews)" title="Shield AI"
+        description="Autonomous aircraft/fighter AI"
+        xmlUrl="https://news.google.com/rss/search?q=%22shield+AI%22+autonomous+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        type="rss" />
+
+      <outline text="Helsing AI (GNews)" title="Helsing"
+        description="European Defense AI (Germany)"
+        xmlUrl="https://news.google.com/rss/search?q=helsing+defense+AI+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        type="rss" />
+
+      <outline text="DroneShield (GNews)" title="DroneShield"
+        description="Counter-UAS / drone detection"
+        xmlUrl="https://news.google.com/rss/search?q=droneshield+counter+UAS+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        type="rss" />
+
+      <outline text="Skydio (GNews)" title="Skydio"
+        description="Autonomous drones (US)"
+        xmlUrl="https://news.google.com/rss/search?q=skydio+drone+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        type="rss" />
+
+      <outline text="Epirus Directed Energy (GNews)" title="Epirus"
+        xmlUrl="https://news.google.com/rss/search?q=epirus+directed+energy+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        type="rss" />
+
+      <outline text="AeroVironment (GNews)" title="AeroVironment"
+        xmlUrl="https://news.google.com/rss/search?q=aerovironment+drone+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        type="rss" />
+
+      <outline text="Northrop Grumman (GNews)" title="Northrop Grumman"
+        xmlUrl="https://news.google.com/rss/search?q=northrop+grumman+AI+autonomy+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        type="rss" />
+
+    </outline>
+
+
+    <!-- ═══════════════════════════════════════════════════
+         🚗 AUTONOMOUS VEHICLES
+         ═══════════════════════════════════════════════════ -->
+    <outline text="🚗 Autonomous Vehicles" title="Autonomous Vehicles">
+
+      <outline text="Waymo (GNews)" title="Waymo News"
+        description="Robotaxi — Alphabet's AV unit — native RSS removed"
+        xmlUrl="https://news.google.com/rss/search?q=waymo+robotaxi+autonomous+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        htmlUrl="https://waymo.com" type="rss" />
+
+      <outline text="Aurora (GNews)" title="Aurora News"
+        description="AV technology for trucking — native RSS removed"
+        xmlUrl="https://news.google.com/rss/search?q=aurora+autonomous+trucking+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        htmlUrl="https://aurora.tech" type="rss" />
+
+      <outline text="Mobileye (GNews)" title="Mobileye News"
+        description="ADAS and AV tech — Intel subsidiary — native RSS removed"
+        xmlUrl="https://news.google.com/rss/search?q=mobileye+ADAS+autonomous+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        htmlUrl="https://www.mobileye.com" type="rss" />
+
+      <!-- GNews for AV companies without RSS -->
+      <outline text="Tesla FSD (GNews)" title="Tesla FSD News"
+        xmlUrl="https://news.google.com/rss/search?q=tesla+full+self+driving+FSD+when:7d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        type="rss" />
+
+      <outline text="Zoox / Amazon AV (GNews)" title="Zoox News"
+        xmlUrl="https://news.google.com/rss/search?q=zoox+autonomous+vehicle+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        type="rss" />
+
+      <outline text="Pony.ai (GNews)" title="Pony.ai News"
+        xmlUrl="https://news.google.com/rss/search?q=pony.ai+autonomous+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        type="rss" />
+
+      <outline text="Einride Electric Trucks (GNews)" title="Einride News"
+        xmlUrl="https://news.google.com/rss/search?q=einride+autonomous+electric+truck+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        type="rss" />
+
+    </outline>
+
+
+    <!-- ═══════════════════════════════════════════════════
+         🧠 ML / DEEP LEARNING / AI INFRASTRUCTURE
+         ═══════════════════════════════════════════════════ -->
+    <outline text="🧠 ML / Deep Learning / AI Infrastructure" title="ML Infrastructure">
+
+      <outline text="DataRobot Blog" title="DataRobot"
+        description="AutoML platform"
+        xmlUrl="https://www.datarobot.com/blog/feed/"
+        htmlUrl="https://www.datarobot.com/blog" type="rss" />
+
+      <outline text="H2O.ai (GNews)" title="H2O.ai News"
+        description="Open source ML platform — native RSS removed"
+        xmlUrl="https://news.google.com/rss/search?q=H2O.ai+machine+learning+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        htmlUrl="https://h2o.ai" type="rss" />
+
+      <outline text="Weights &amp; Biases Blog" title="Weights &amp; Biases"
+        description="MLOps and experiment tracking"
+        xmlUrl="https://wandb.ai/site/blog/feed"
+        htmlUrl="https://wandb.ai/site/blog" type="rss" />
+
+      <outline text="Modular (GNews)" title="Modular News"
+        description="Mojo language, AI infrastructure — native RSS removed"
+        xmlUrl="https://news.google.com/rss/search?q=modular+AI+mojo+programming+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        htmlUrl="https://www.modular.com" type="rss" />
+
+      <!-- GNews for chipmakers without RSS -->
+      <outline text="Cerebras Systems (GNews)" title="Cerebras"
+        description="Wafer-scale AI chips"
+        xmlUrl="https://news.google.com/rss/search?q=cerebras+AI+chip+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        type="rss" />
+
+      <outline text="Groq AI Inference (GNews)" title="Groq"
+        description="Ultra-fast AI inference chips"
+        xmlUrl="https://news.google.com/rss/search?q=groq+AI+inference+chip+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        type="rss" />
+
+      <outline text="Tenstorrent (GNews)" title="Tenstorrent"
+        description="Jim Keller's AI chip startup"
+        xmlUrl="https://news.google.com/rss/search?q=tenstorrent+AI+chip+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        type="rss" />
+
+      <outline text="SambaNova (GNews)" title="SambaNova"
+        xmlUrl="https://news.google.com/rss/search?q=sambanova+AI+hardware+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        type="rss" />
+
+    </outline>
+
+
+    <!-- ═══════════════════════════════════════════════════
+         🇨🇳 CHINESE AI COMPANIES
+         ═══════════════════════════════════════════════════ -->
+    <outline text="🇨🇳 Chinese AI Companies" title="Chinese AI">
+
+      <!-- DeepSeek — the biggest story of early 2025 -->
+      <outline text="DeepSeek (GNews)" title="DeepSeek"
+        description="Open LLMs — shocked the world with R1. No native RSS."
+        xmlUrl="https://news.google.com/rss/search?q=deepseek+AI+model+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        type="rss" />
+
+      <outline text="Alibaba Qwen / DAMO (GNews)" title="Alibaba Qwen"
+        description="LLMs, Cloud AI (Alibaba Group)"
+        xmlUrl="https://news.google.com/rss/search?q=alibaba+qwen+OR+%22DAMO+Academy%22+AI+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        type="rss" />
+
+      <outline text="ByteDance Doubao / AI (GNews)" title="ByteDance AI"
+        description="LLMs, consumer AI, TikTok parent"
+        xmlUrl="https://news.google.com/rss/search?q=bytedance+doubao+AI+model+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        type="rss" />
+
+      <outline text="Baidu ERNIE / Apollo (GNews)" title="Baidu AI"
+        description="LLMs, AI search, autonomous driving"
+        xmlUrl="https://news.google.com/rss/search?q=baidu+ERNIE+OR+%22apollo+go%22+AI+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        type="rss" />
+
+      <outline text="Tencent Hunyuan (GNews)" title="Tencent AI"
+        description="LLMs, gaming AI, WeChat AI"
+        xmlUrl="https://news.google.com/rss/search?q=tencent+hunyuan+AI+model+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        type="rss" />
+
+      <outline text="MiniMax AI (GNews)" title="MiniMax"
+        description="Multimodal LLMs — top Chinese AI startup"
+        xmlUrl="https://news.google.com/rss/search?q=minimax+AI+model+LLM+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        type="rss" />
+
+      <outline text="Moonshot AI / Kimi (GNews)" title="Moonshot Kimi"
+        description="Long-context LLM leader in China"
+        xmlUrl="https://news.google.com/rss/search?q=moonshot+AI+kimi+LLM+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        type="rss" />
+
+      <outline text="Zhipu AI (GNews)" title="Zhipu AI"
+        xmlUrl="https://news.google.com/rss/search?q=zhipu+AI+GLM+model+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        type="rss" />
+
+      <outline text="Unitree Robotics (GNews)" title="Unitree"
+        description="Viral quadruped and humanoid robots from China"
+        xmlUrl="https://news.google.com/rss/search?q=unitree+robot+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        type="rss" />
+
+      <outline text="DJI Drones (GNews)" title="DJI"
+        description="World's largest consumer drone maker"
+        xmlUrl="https://news.google.com/rss/search?q=DJI+drone+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        type="rss" />
+
+      <outline text="UBTECH Humanoid (GNews)" title="UBTECH"
+        description="Humanoid robots (Walker series)"
+        xmlUrl="https://news.google.com/rss/search?q=UBTECH+humanoid+robot+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        type="rss" />
+
+      <outline text="Horizon Robotics (GNews)" title="Horizon Robotics"
+        description="Automotive AI chips for smart cars"
+        xmlUrl="https://news.google.com/rss/search?q=%22horizon+robotics%22+automotive+AI+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        type="rss" />
+
+      <outline text="Manus AI Agents (GNews)" title="Manus / Butterfly Effect"
+        description="Viral autonomous AI agent from China"
+        xmlUrl="https://news.google.com/rss/search?q=manus+AI+agent+butterfly+effect+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        type="rss" />
+
+      <!-- Chinese tech news in English -->
+      <outline text="South China Morning Post — Tech" title="SCMP Tech"
+        description="Best English source for Chinese tech coverage"
+        xmlUrl="https://www.scmp.com/rss/5/feed"
+        htmlUrl="https://www.scmp.com/technology" type="rss" />
+
+      <outline text="TechCrunch — China Tech" title="TC China"
+        xmlUrl="https://news.google.com/rss/search?q=china+AI+tech+site:techcrunch.com+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        type="rss" />
+
+      <outline text="The Information — China AI (GNews)" title="China AI Intelligence"
+        xmlUrl="https://news.google.com/rss/search?q=china+AI+regulation+OR+export+controls+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        type="rss" />
+
+    </outline>
+
+
+    <!-- ═══════════════════════════════════════════════════
+         🇪🇺 EUROPEAN AI COMPANIES
+         ═══════════════════════════════════════════════════ -->
+    <outline text="🇪🇺 European AI" title="European AI">
+
+      <outline text="Mistral AI (GNews)" title="Mistral AI News"
+        description="Open LLMs from France — top European AI lab — native RSS removed"
+        xmlUrl="https://news.google.com/rss/search?q=mistral+AI+LLM+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        htmlUrl="https://mistral.ai" type="rss" />
+
+      <outline text="Aleph Alpha (GNews)" title="Aleph Alpha"
+        description="Sovereign enterprise AI — Germany"
+        xmlUrl="https://news.google.com/rss/search?q=%22aleph+alpha%22+AI+when:30d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        type="rss" />
+
+      <outline text="Wayve (GNews)" title="Wayve"
+        description="Embodied AI / AV (UK)"
+        xmlUrl="https://news.google.com/rss/search?q=wayve+embodied+AI+autonomous+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        type="rss" />
+
+      <outline text="Poolside AI (GNews)" title="Poolside"
+        description="Coding AI (France)"
+        xmlUrl="https://news.google.com/rss/search?q=poolside+AI+coding+when:30d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        type="rss" />
+
+      <outline text="EU AI Act / Policy (GNews)" title="EU AI Policy"
+        description="Track EU AI Act implementation and regulation"
+        xmlUrl="https://news.google.com/rss/search?q=%22EU+AI+Act%22+regulation+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        type="rss" />
+
+    </outline>
+
+
+    <!-- ═══════════════════════════════════════════════════
+         🔬 AI RESEARCH LABS & ACADEMIA
+         ═══════════════════════════════════════════════════ -->
+    <outline text="🔬 AI Research Labs &amp; Academia" title="AI Research">
+
+      <outline text="Stanford AI Lab (SAIL) Blog" title="Stanford SAIL"
+        xmlUrl="https://ai.stanford.edu/blog/feed.xml"
+        htmlUrl="https://ai.stanford.edu/blog" type="rss" />
+
+      <outline text="MIT AI / CSAIL News" title="MIT AI"
+        xmlUrl="https://news.mit.edu/rss/topic/artificial-intelligence2"
+        htmlUrl="https://news.mit.edu/topic/artificial-intelligence" type="rss" />
+
+      <outline text="Berkeley AI Research (BAIR) Blog" title="BAIR"
+        xmlUrl="https://bair.berkeley.edu/blog/feed.xml"
+        htmlUrl="https://bair.berkeley.edu/blog" type="rss" />
+
+      <outline text="Alignment Forum" title="Alignment Forum"
+        description="AI safety research — primary publication venue"
+        xmlUrl="https://www.alignmentforum.org/feed.xml"
+        htmlUrl="https://www.alignmentforum.org" type="rss" />
+
+      <outline text="MIRI — Machine Intelligence Research" title="MIRI"
+        description="AI safety research institute"
+        xmlUrl="https://intelligence.org/feed/"
+        htmlUrl="https://intelligence.org" type="rss" />
+
+      <outline text="Distill.pub" title="Distill"
+        description="Clear explanation of ML research with interactive visualizations"
+        xmlUrl="https://distill.pub/rss.xml"
+        htmlUrl="https://distill.pub" type="rss" />
+
+      <!-- arXiv feeds — raw research firehose -->
+      <outline text="arXiv — Artificial Intelligence (cs.AI)" title="arXiv cs.AI"
+        description="Daily AI research preprints"
+        xmlUrl="https://rss.arxiv.org/rss/cs.AI"
+        htmlUrl="https://arxiv.org/list/cs.AI/recent" type="rss" />
+
+      <outline text="arXiv — Machine Learning (cs.LG)" title="arXiv cs.LG"
+        description="Daily ML research preprints"
+        xmlUrl="https://rss.arxiv.org/rss/cs.LG"
+        htmlUrl="https://arxiv.org/list/cs.LG/recent" type="rss" />
+
+      <outline text="arXiv — Computer Vision (cs.CV)" title="arXiv cs.CV"
+        xmlUrl="https://rss.arxiv.org/rss/cs.CV"
+        htmlUrl="https://arxiv.org/list/cs.CV/recent" type="rss" />
+
+      <outline text="arXiv — Robotics (cs.RO)" title="arXiv Robotics"
+        xmlUrl="https://rss.arxiv.org/rss/cs.RO"
+        htmlUrl="https://arxiv.org/list/cs.RO/recent" type="rss" />
+
+      <outline text="Papers With Code — Latest" title="Papers With Code"
+        description="ML papers with code implementations — trending research"
+        xmlUrl="https://paperswithcode.com/latest/rss"
+        htmlUrl="https://paperswithcode.com" type="rss" />
+
+    </outline>
+
+
+    <!-- ═══════════════════════════════════════════════════
+         📰 AI NEWSLETTERS (RSS-enabled)
+         ═══════════════════════════════════════════════════ -->
+    <outline text="📰 AI Newsletters" title="AI Newsletters">
+
+      <outline text="The Batch (GNews)" title="The Batch News"
+        description="Andrew Ng's weekly AI digest — native RSS removed"
+        xmlUrl="https://news.google.com/rss/search?q=deeplearning.ai+batch+Andrew+Ng+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        htmlUrl="https://www.deeplearning.ai/the-batch" type="rss" />
+
+      <outline text="Import AI (Jack Clark)" title="Import AI"
+        description="Weekly deep-dive by Anthropic co-founder Jack Clark"
+        xmlUrl="https://importai.substack.com/feed"
+        htmlUrl="https://importai.substack.com" type="rss" />
+
+      <outline text="TLDR AI (GNews)" title="TLDR AI News"
+        description="Daily AI tools and news digest — native RSS removed"
+        xmlUrl="https://news.google.com/rss/search?q=site:tldr.tech+AI+when:7d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        htmlUrl="https://tldr.tech/ai" type="rss" />
+
+      <outline text="Last Week in AI" title="Last Week in AI"
+        description="Weekly AI roundup with context"
+        xmlUrl="https://lastweekin.ai/feed"
+        htmlUrl="https://lastweekin.ai" type="rss" />
+
+      <outline text="Ahead of AI (Sebastian Raschka)" title="Ahead of AI"
+        description="Deep ML/AI research breakdowns for practitioners"
+        xmlUrl="https://magazine.sebastianraschka.com/feed"
+        htmlUrl="https://magazine.sebastianraschka.com" type="rss" />
+
+      <outline text="MIT Technology Review — AI Newsletter" title="MIT Tech AI"
+        xmlUrl="https://www.technologyreview.com/topic/artificial-intelligence/feed/"
+        htmlUrl="https://www.technologyreview.com/topic/artificial-intelligence" type="rss" />
+
+      <outline text="VentureBeat — AI" title="VentureBeat AI"
+        description="Enterprise AI, funding, model deployments"
+        xmlUrl="https://venturebeat.com/category/ai/feed/"
+        htmlUrl="https://venturebeat.com/ai" type="rss" />
+
+    </outline>
+
+
+    <!-- ═══════════════════════════════════════════════════
+         ⚡ TECH NEWS (CUTTING EDGE)
+         ═══════════════════════════════════════════════════ -->
+    <outline text="⚡ Tech News — Cutting Edge" title="Tech News">
+
+      <outline text="Ars Technica" title="Ars Technica"
+        description="Deep technical analysis: AI, security, science, policy"
+        xmlUrl="https://feeds.arstechnica.com/arstechnica/index"
+        htmlUrl="https://arstechnica.com" type="rss" />
+
+      <outline text="MIT Technology Review" title="MIT Tech Review"
+        xmlUrl="https://www.technologyreview.com/feed/"
+        htmlUrl="https://www.technologyreview.com" type="rss" />
+
+      <outline text="IEEE Spectrum — AI" title="IEEE Spectrum AI"
+        xmlUrl="https://spectrum.ieee.org/feeds/topic/artificial-intelligence.rss"
+        htmlUrl="https://spectrum.ieee.org" type="rss" />
+
+      <outline text="IEEE Spectrum — All" title="IEEE Spectrum"
+        xmlUrl="https://spectrum.ieee.org/feeds/feed.rss"
+        htmlUrl="https://spectrum.ieee.org" type="rss" />
+
+      <outline text="Wired" title="Wired"
+        xmlUrl="https://www.wired.com/feed/rss"
+        htmlUrl="https://www.wired.com" type="rss" />
+
+      <outline text="The Verge — AI" title="The Verge AI"
+        xmlUrl="https://www.theverge.com/rss/ai-artificial-intelligence/index.xml"
+        htmlUrl="https://www.theverge.com" type="rss" />
+
+      <outline text="TechCrunch — AI" title="TechCrunch AI"
+        xmlUrl="https://techcrunch.com/category/artificial-intelligence/feed/"
+        htmlUrl="https://techcrunch.com" type="rss" />
+
+      <outline text="Hacker News (100+ pts filtered)" title="Hacker News"
+        description="Community-curated tech — filtered to 100+ point posts only"
+        xmlUrl="https://hnrss.org/frontpage?points=100"
+        htmlUrl="https://news.ycombinator.com" type="rss" />
+
+      <outline text="Futurism — AI" title="Futurism"
+        xmlUrl="https://futurism.com/categories/ai-artificial-intelligence/feed"
+        htmlUrl="https://futurism.com" type="rss" />
+
+    </outline>
+
+
+    <!-- ═══════════════════════════════════════════════════
+         🌍 GLOBAL DEFENCE & GEOPOLITICS
+         ═══════════════════════════════════════════════════ -->
+    <outline text="🌍 Global Defence &amp; Geopolitics" title="Global Defence">
+
+      <outline text="Defense News" title="Defense News"
+        description="#1 international defence trade publication"
+        xmlUrl="https://www.defensenews.com/arc/outboundfeeds/rss/?outputType=xml"
+        htmlUrl="https://www.defensenews.com" type="rss" />
+
+      <outline text="Breaking Defense" title="Breaking Defense"
+        description="US/NATO procurement, policy — very fast on acquisitions"
+        xmlUrl="https://breakingdefense.com/feed/"
+        htmlUrl="https://breakingdefense.com" type="rss" />
+
+      <outline text="War on the Rocks" title="War on the Rocks"
+        description="Expert strategic analysis and security studies"
+        xmlUrl="https://warontherocks.com/feed/"
+        htmlUrl="https://warontherocks.com" type="rss" />
+
+      <outline text="The Diplomat — Security" title="The Diplomat"
+        description="Best Indo-Pacific security and geopolitics"
+        xmlUrl="https://thediplomat.com/category/security/feed/"
+        htmlUrl="https://thediplomat.com" type="rss" />
+
+      <outline text="Jane's (GNews Proxy)" title="Jane's Defence"
+        description="World's most authoritative defence intelligence"
+        xmlUrl="https://news.google.com/rss/search?q=site:janes.com&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        type="rss" />
+
+      <outline text="IISS (GNews)" title="IISS News"
+        description="Military Balance, nuclear posture, strategic assessments — native RSS blocked"
+        xmlUrl="https://news.google.com/rss/search?q=IISS+military+balance+security+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        htmlUrl="https://www.iiss.org" type="rss" />
+
+      <outline text="Chatham House (GNews)" title="Chatham House News"
+        description="Big-picture geopolitical analysis — native RSS blocked"
+        xmlUrl="https://news.google.com/rss/search?q=site:chathamhouse.org+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        htmlUrl="https://www.chathamhouse.org" type="rss" />
+
+      <outline text="South Asian Voices (STIMSON)" title="South Asian Voices"
+        description="India-Pakistan-Bangladesh regional security"
+        xmlUrl="https://southasianvoices.org/feed/"
+        htmlUrl="https://southasianvoices.org" type="rss" />
+
+      <outline text="Foreign Policy" title="Foreign Policy"
+        xmlUrl="https://foreignpolicy.com/feed/"
+        htmlUrl="https://foreignpolicy.com" type="rss" />
+
+      <outline text="GN: Global Defence Procurement (7d)" title="GN Defence Watch"
+        xmlUrl="https://news.google.com/rss/search?q=defense+procurement+OR+arms+deal+when:7d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        type="rss" />
+
+      <outline text="GN: Indo-Pacific Security (7d)" title="GN Indo-Pacific"
+        xmlUrl="https://news.google.com/rss/search?q=indo-pacific+security+OR+south+china+sea+when:7d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        type="rss" />
+
+    </outline>
+
+
+    <!-- ═══════════════════════════════════════════════════
+         🇧🇩 BANGLADESH — ENGLISH
+         ═══════════════════════════════════════════════════ -->
+    <outline text="🇧🇩 Bangladesh — English" title="Bangladesh English">
+
+      <outline text="The Daily Star" title="Daily Star"
+        description="Headlines from The Daily Star"
+        xmlUrl="https://www.thedailystar.net/frontpage/rss.xml"
+        htmlUrl="https://www.thedailystar.net" type="rss" />
+
+      <outline text="Dhaka Tribune (GNews Proxy)" title="Dhaka Tribune"
+        description="Cloudflare blocked - using GNews proxy"
+        xmlUrl="https://news.google.com/rss/search?q=site:dhakatribune.com&amp;hl=en-BD&amp;gl=BD&amp;ceid=BD:en"
+        htmlUrl="https://www.dhakatribune.com" type="rss" />
+
+      <outline text="bdnews24 (GNews Proxy)" title="bdnews24"
+        description="Cloudflare blocked - using GNews proxy"
+        xmlUrl="https://news.google.com/rss/search?q=site:bdnews24.com&amp;hl=en-BD&amp;gl=BD&amp;ceid=BD:en"
+        htmlUrl="https://bdnews24.com" type="rss" />
+
+      <!-- REMOVED: New Age Bangladesh (404 - feed removed) -->
+      <!-- REMOVED: Dhaka Post (404 - feed removed) -->
+      <!-- REMOVED: Financial Express BD (returns HTML, not RSS) -->
+
+      <outline text="GN: Bangladesh Tech" title="GN BD Tech"
+        xmlUrl="https://news.google.com/rss/search?q=technology+Bangladesh+startup+when:14d&amp;hl=en-BD&amp;gl=BD&amp;ceid=BD:en"
+        type="rss" />
+
+      <outline text="GN: BD Defence (7d)" title="GN BD Defence"
+        xmlUrl="https://news.google.com/rss/search?q=bangladesh+military+OR+navy+OR+defence+when:7d&amp;hl=en-BD&amp;gl=BD&amp;ceid=BD:en"
+        type="rss" />
+
+    </outline>
+
+
+    <!-- ═══════════════════════════════════════════════════
+         🇧🇩 BANGLADESH — BANGLA
+         ═══════════════════════════════════════════════════ -->
+    <outline text="🇧🇩 Bangladesh — Bangla" title="Bangladesh Bangla">
+
+      <outline text="প্রথম আলো" title="Prothom Alo"
+        xmlUrl="https://www.prothomalo.com/feed/"
+        htmlUrl="https://www.prothomalo.com" type="rss" />
+
+      <outline text="কালের কণ্ঠ" title="Kaler Kantho"
+        description="kalerkantho.com RSS Feed"
+        xmlUrl="https://www.kalerkantho.com/rss.xml"
+        type="rss" />
+
+      <outline text="যুগান্তর (GNews Proxy)" title="Jugantor"
+        description="Invalid RSS - using GNews proxy"
+        xmlUrl="https://news.google.com/rss/search?q=site:jugantor.com&amp;hl=bn-BD&amp;gl=BD&amp;ceid=BD:bn"
+        type="rss" />
+
+      <outline text="বাংলানিউজ২৪ (GNews Proxy)" title="BanglaNews24"
+        description="Cloudflare blocked - using GNews proxy"
+        xmlUrl="https://news.google.com/rss/search?q=site:banglanews24.com&amp;hl=bn-BD&amp;gl=BD&amp;ceid=BD:bn"
+        type="rss" />
+
+      <outline text="জাগো নিউজ" title="Jago News"
+        xmlUrl="https://www.jagonews24.com/rss/rss.xml"
+        htmlUrl="https://www.jagonews24.com" type="rss" />
+
+      <outline text="BD24Live" title="BD24Live"
+        xmlUrl="https://www.bd24live.com/feed"
+        htmlUrl="https://www.bd24live.com" type="rss" />
+
+      <outline text="বাংলা ট্রিবিউন (GNews Proxy)" title="Bangla Tribune"
+        description="Cloudflare blocked - using GNews proxy"
+        xmlUrl="https://news.google.com/rss/search?q=site:banglatribune.com&amp;hl=bn-BD&amp;gl=BD&amp;ceid=BD:bn"
+        htmlUrl="https://banglatribune.com" type="rss" />
+
+      <outline text="সমকাল (GNews Proxy)" title="Samakal"
+        description="Cloudflare blocked - using GNews proxy"
+        xmlUrl="https://news.google.com/rss/search?q=site:samakal.com&amp;hl=bn-BD&amp;gl=BD&amp;ceid=BD:bn"
+        htmlUrl="https://samakal.com" type="rss" />
+
+    </outline>
+
+
+    <!-- ═══════════════════════════════════════════════════
+         🌐 INTERNATIONAL WIRE & GENERAL
+         ═══════════════════════════════════════════════════ -->
+    <outline text="🌐 International Wire &amp; General" title="International">
+
+      <outline text="Reuters — Top News (GNews)" title="Reuters News"
+        description="Native RSS timeout - using GNews proxy"
+        xmlUrl="https://news.google.com/rss/search?q=site:reuters.com+when:7d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        htmlUrl="https://www.reuters.com" type="rss" />
+
+      <outline text="AP Top Headlines (GNews)" title="AP News"
+        description="Native RSS timeout - using GNews proxy"
+        xmlUrl="https://news.google.com/rss/search?q=site:apnews.com+when:7d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        htmlUrl="https://apnews.com" type="rss" />
+
+      <outline text="Al Jazeera — World" title="Al Jazeera"
+        xmlUrl="https://www.aljazeera.com/xml/rss/all.xml"
+        htmlUrl="https://www.aljazeera.com" type="rss" />
+
+      <outline text="BBC News — World" title="BBC World"
+        xmlUrl="https://feeds.bbci.co.uk/news/world/rss.xml"
+        htmlUrl="https://www.bbc.com/news/world" type="rss" />
+
+      <outline text="The Economist" title="The Economist"
+        xmlUrl="https://www.economist.com/latest/rss.xml"
+        htmlUrl="https://www.economist.com" type="rss" />
+
+      <outline text="NYT — Technology" title="NYT Tech"
+        xmlUrl="https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml"
+        htmlUrl="https://www.nytimes.com/section/technology" type="rss" />
+
+      <outline text="GN: World Big Events" title="GN World Events"
+        xmlUrl="https://news.google.com/rss/headlines/section/topic/WORLD?hl=en-US&amp;gl=US&amp;ceid=US:en"
+        type="rss" />
+
+    </outline>
+
+
+    <!-- ═══════════════════════════════════════════════════
+         🔍 SMART GOOGLE NEWS DYNAMIC QUERIES
+         ═══════════════════════════════════════════════════ -->
+    <outline text="🔍 Smart GNews Dynamic Queries" title="GNews Dynamic">
+
+      <outline text="GN: AGI / Foundation Model Launches (3d)" title="GN AGI Launches"
+        description="Track new model releases from any lab, globally"
+        xmlUrl="https://news.google.com/rss/search?q=AGI+OR+%22foundation+model%22+OR+%22AI+model%22+launch+release+when:3d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        type="rss" />
+
+      <outline text="GN: Humanoid Robot News (7d)" title="GN Humanoid Robots"
+        xmlUrl="https://news.google.com/rss/search?q=humanoid+robot+when:7d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        type="rss" />
+
+      <outline text="GN: AI Chip / Semiconductor (7d)" title="GN AI Chips"
+        xmlUrl="https://news.google.com/rss/search?q=AI+chip+semiconductor+GPU+when:7d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        type="rss" />
+
+      <outline text="GN: Quantum Computing (14d)" title="GN Quantum"
+        xmlUrl="https://news.google.com/rss/search?q=quantum+computing+breakthrough+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        type="rss" />
+
+      <outline text="GN: Autonomous Weapons / Drones (7d)" title="GN Autonomous Weapons"
+        xmlUrl="https://news.google.com/rss/search?q=autonomous+weapon+OR+drone+swarm+when:7d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        type="rss" />
+
+      <outline text="GN: AI Safety / Alignment (14d)" title="GN AI Safety"
+        xmlUrl="https://news.google.com/rss/search?q=%22AI+safety%22+OR+%22AI+alignment%22+OR+%22AI+regulation%22+when:14d&amp;hl=en-US&amp;gl=US&amp;ceid=US:en"
+        type="rss" />
+
+      <outline text="GN: BD Economy / Remittance (7d)" title="GN BD Economy"
+        xmlUrl="https://news.google.com/rss/search?q=bangladesh+economy+OR+taka+OR+remittance+when:7d&amp;hl=en-BD&amp;gl=BD&amp;ceid=BD:en"
+        type="rss" />
+
+    </outline>
+
+  </body>
+</opml>

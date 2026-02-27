@@ -1,0 +1,67 @@
+# Generated & Secrets
+.env
+openclaw-config/
+backups/
+*.log
+
+# Binaries
+son-of-anthon
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Database files
+*.db
+*.db-journal
+
+# Generated Docker files (from setup.sh)
+docker-compose.yml
+Dockerfile.gateway
+
+# Agent State (Ignore memory, track identities)
+workspaces/*/memory
+workspaces/*/HEARTBEAT.md
+workspaces/*/BOOTSTRAP.md
+
+# Docker
+.docker/
+
+# GPG
+*.asc
+*.gpg
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.idea/
+*.swp
+*.swo
+*~
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+
+# Backup files
+*.bak
+*.backup
+*.old
+*.orig
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+.pytest_cache/
+.hypothesis/

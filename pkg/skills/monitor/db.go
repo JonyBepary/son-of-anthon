@@ -120,3 +120,34 @@ func (db *DB) CleanupExpired() error {
 func (db *DB) Close() error {
 	return db.db.Close()
 }
+
+func (db *DB) GetRecentItems(category string, limit int) []NewsItem {
+	var items []NewsItem
+	query := "SELECT id, source, source_tier, category, url, title, summary, published_at, ingested_at FROM items"
+	var rows *sql.Rows
+	var err error
+
+	if category != "" {
+		query += " WHERE category = ?"
+		rows, err = db.db.Query(query+" ORDER BY published_at DESC LIMIT ?", category, limit)
+	} else {
+		rows, err = db.db.Query(query + " ORDER BY published_at DESC LIMIT ?")
+	}
+	if err != nil {
+		return items
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var item NewsItem
+		var publishedAt, ingestedAt int64
+		if err := rows.Scan(&item.ID, &item.Source, &item.SourceTier, &item.Category, &item.CanonicalURL, &item.TitleRaw, &item.Summary, &publishedAt, &ingestedAt); err != nil {
+			continue
+		}
+		item.PublishedAt = time.Unix(publishedAt, 0)
+		item.IngestedAt = time.Unix(ingestedAt, 0)
+		items = append(items, item)
+	}
+
+	return items
+}

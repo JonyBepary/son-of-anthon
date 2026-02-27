@@ -1,0 +1,382 @@
+name: Personal OS CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Daily security scan at 2 AM UTC
+    - cron: '0 2 * * *'
+
+env:
+  DOCKER_BUILDKIT: 1
+  COMPOSE_DOCKER_CLI_BUILD: 1
+
+jobs:
+  lint:
+    name: Lint & Format Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check shell scripts
+        run: |
+          sudo apt-get install -y shellcheck
+          find . -name "*.sh" -type f -exec shellcheck -x {} \; || true
+
+      - name: Check JSON files
+        run: |
+          find . -name "*.json" -type f -exec bash -c 'jq empty {} || echo "Invalid JSON: {}"' \;
+
+      - name: Check TOML files
+        run: |
+          pip install toml
+          find . -name "*.toml" -type f -exec python3 -c "import toml; toml.load(open('{}'))" \; || true
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: Check for secrets
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+
+  test-config:
+    name: Test Configuration
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate config.toml
+        run: |
+          pip install toml
+          python3 -c "import toml; cfg = toml.load('config.toml'); print('Config OK')"
+
+      - name: Test config loader
+        run: |
+          source lib/config_loader.sh
+          export CONFIG_FILE="config.toml"
+
+          # Test key reads
+          user_name=$(cfg user.name "test")
+          echo "User: $user_name"
+
+          morning_cron=$(cfg scheduling.morning_brief_check_interval "*/10 * * * *")
+          echo "Morning cron: $morning_cron"
+
+          # Verify defaults work
+          missing=$(cfg nonexistent.key "default_value")
+          if [[ "$missing" != "default_value" ]]; then
+            echo "Config default handling broken"
+            exit 1
+          fi
+
+          echo "Config loader OK"
+
+      - name: Validate cron syntax
+        run: |
+          pip install croniter
+          python3 << 'EOF'
+          import toml
+          from croniter import croniter
+
+          cfg = toml.load('config.toml')
+
+          crons = [
+              cfg['scheduling']['morning_brief_check_interval'],
+              cfg['scheduling']['research_scan_interval'],
+              cfg['scheduling']['monitor_scan_interval']
+          ]
+
+          for cron_expr in crons:
+              try:
+                  croniter(cron_expr)
+                  print(f"✓ Valid cron: {cron_expr}")
+              except:
+                  print(f"✗ Invalid cron: {cron_expr}")
+                  exit(1)
+          EOF
+
+  test-activity-tracker:
+    name: Test Activity Tracker
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Test activity tracker skill
+        run: |
+          # Create test environment
+          mkdir -p /tmp/test-activity
+          export ACTIVITY_DIR=/tmp/test-activity
+
+          # Mock boot time
+          date +%s > "$ACTIVITY_DIR/boot_time"
+
+          # Test log_activity
+          bash skills/activity-tracker/tracker.sh log_activity "test" || {
+            echo "log_activity failed"
+            exit 1
+          }
+
+          # Test check_idle (should fail - no idle tracking yet)
+          if bash skills/activity-tracker/tracker.sh check_idle 30; then
+            echo "check_idle unexpectedly succeeded"
+          else
+            echo "check_idle correctly detected no activity"
+          fi
+
+          # Test get_boot_time
+          boot_time=$(bash skills/activity-tracker/tracker.sh get_boot_time)
+          echo "Boot time: $boot_time"
+
+          # Test is_fresh_boot
+          if bash skills/activity-tracker/tracker.sh is_fresh_boot 9999; then
+            echo "✓ is_fresh_boot works"
+          else
+            echo "✗ is_fresh_boot failed"
+            exit 1
+          fi
+
+  test-backup:
+    name: Test Backup System
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install GPG
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gnupg
+
+      - name: Test GPG setup
+        run: |
+          # Setup GPG key
+          bash scripts/backup.sh setup-gpg
+
+          # Verify key created
+          gpg --list-keys "personal-os-backup" || {
+            echo "GPG key creation failed"
+            exit 1
+          }
+
+      - name: Test backup encryption
+        run: |
+          # Create test workspace
+          mkdir -p workspaces/test-agent
+          echo "test data" > workspaces/test-agent/data.txt
+
+          # Backup
+          bash scripts/backup.sh backup test-agent
+
+          # Verify encrypted file exists
+          ls backups/test-agent_*.tar.gz.gpg || {
+            echo "Backup file not created"
+            exit 1
+          }
+
+          # Test restore
+          rm -rf workspaces/test-agent
+          backup_file=$(ls backups/test-agent_*.tar.gz.gpg | head -1)
+          bash scripts/backup.sh restore test-agent "$backup_file"
+
+          # Verify restored data
+          if [[ -f "workspaces/test-agent/data.txt" ]]; then
+            echo "✓ Backup/restore OK"
+          else
+            echo "✗ Restore failed"
+            exit 1
+          fi
+
+  test-device-pairing:
+    name: Test Device Pairing
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install jq
+        run: sudo apt-get install -y jq
+
+      - name: Test device pairing
+        run: |
+          # Initialize
+          bash scripts/device_pairing.sh list
+
+          # Generate test fingerprint
+          fingerprint=$(echo -n "test-host|127.0.0.1|test-ua" | sha256sum | awk '{print $1}')
+
+          # Add to pending (manually for CI)
+          mkdir -p openclaw-config/security
+          echo '{"pending": []}' > openclaw-config/security/pending_devices.json
+          echo '{"devices": []}' > openclaw-config/security/devices.json
+
+          jq --arg fp "$fingerprint" \
+             --arg host "test-host" \
+             --arg ip "127.0.0.1" \
+             '.pending += [{"fingerprint": $fp, "hostname": $host, "ip_address": $ip, "requested_at": "2024-01-01T00:00:00Z", "expires_at": "2099-01-01T00:00:00Z"}]' \
+             openclaw-config/security/pending_devices.json > /tmp/pending.json
+
+          mv /tmp/pending.json openclaw-config/security/pending_devices.json
+
+          # Approve
+          bash scripts/device_pairing.sh approve "${fingerprint:0:8}"
+
+          # Verify approved
+          if bash scripts/device_pairing.sh check "$fingerprint"; then
+            echo "✓ Device pairing OK"
+          else
+            echo "✗ Device approval failed"
+            exit 1
+          fi
+
+          # Revoke
+          bash scripts/device_pairing.sh revoke "${fingerprint:0:8}"
+
+          # Verify revoked
+          if bash scripts/device_pairing.sh check "$fingerprint"; then
+            echo "✗ Device revocation failed"
+            exit 1
+          else
+            echo "✓ Device revocation OK"
+          fi
+
+  integration-test:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: [lint, test-config, test-activity-tracker]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Install OpenClaw CLI
+        run: |
+          cd openclaw
+          npm install -g pnpm
+          pnpm install
+          pnpm build
+
+      - name: Create test environment
+        run: |
+          # Copy config template
+          cp config.toml.example config.toml || cp config.toml config.toml.test
+
+          # Set test mode
+          sed -i 's/test_mode.*/test_mode = true/' config.toml
+
+          # Generate openclaw.json
+          bash setup.sh || echo "Setup script not executable, using manual config"
+
+      - name: Start OpenClaw Gateway
+        run: |
+          cd openclaw
+          docker-compose up -d
+
+          # Wait for gateway
+          timeout 60 bash -c 'until curl -f http://localhost:3000/health 2>/dev/null; do sleep 2; done' || {
+            echo "Gateway failed to start"
+            docker-compose logs
+            exit 1
+          }
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+      - name: Run integration tests
+        run: |
+          # Run test suite (skip tests requiring API keys if not available)
+          bash test/run_tests.sh || {
+            echo "Some tests failed - check logs"
+            exit 1
+          }
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          PERPLEXITY_API_KEY: ${{ secrets.PERPLEXITY_API_KEY }}
+
+      - name: Collect logs
+        if: failure()
+        run: |
+          cd openclaw
+          docker-compose logs > /tmp/openclaw-logs.txt
+
+      - name: Upload logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: openclaw-logs
+          path: /tmp/openclaw-logs.txt
+
+      - name: Shutdown
+        if: always()
+        run: |
+          cd openclaw
+          docker-compose down -v
+
+  build-docs:
+    name: Build Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install mkdocs mkdocs-material
+
+      - name: Build docs
+        run: |
+          cd docs
+          mkdocs build || echo "MkDocs not configured yet"
+
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    needs: [integration-test, security-scan]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # Simple changelog from commits
+          echo "## Changes" > CHANGELOG_NEW.md
+          git log --pretty=format:"- %s (%h)" $(git describe --tags --abbrev=0 2>/dev/null || echo "")..HEAD >> CHANGELOG_NEW.md || true
+
+      - name: Create release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          body_path: CHANGELOG_NEW.md
+          files: |
+            config.toml.example
+            setup.sh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

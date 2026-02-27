@@ -7,7 +7,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"html"
-	"net/http"
+	"log"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -17,7 +17,10 @@ import (
 	"time"
 
 	"github.com/hbollon/go-edlib"
+	"github.com/jony/son-of-anthon/pkg/skills"
 	"github.com/mmcdole/gofeed"
+	"github.com/sipeed/picoclaw/pkg/tools"
+	"golang.org/x/sync/errgroup"
 )
 
 // Constants
@@ -59,20 +62,75 @@ type Feed struct {
 
 // MonitorSkill - main skill struct
 type MonitorSkill struct {
-	workspace   string
-	db          *DB
-	seenURLs    map[string]time.Time
-	seenTitles  map[string]time.Time
-	seenBodies  map[string]time.Time
-	feeds       []Feed
-	timeWindows map[string]time.Duration
-	semaphore   chan struct{}
-	mu          sync.RWMutex
+	workspace              string
+	db                     *DB
+	seenURLs               map[string]time.Time
+	seenTitles             map[string]time.Time
+	seenBodies             map[string]time.Time
+	shownURLs              map[string]int // URL -> fetch count when shown
+	feeds                  []Feed
+	timeWindows            map[string]time.Duration
+	semaphore              chan struct{}
+	mu                     sync.RWMutex
+	llmProvider            LLMProvider
+	recentItems            []NewsItem
+	enableLLMConflictCheck bool
+	maxFeedsPerCategory    int
+	fetchCount             int
+}
+
+// Config holds optional configuration for MonitorSkill
+type Config struct {
+	DBPath                 string
+	EnableLLMConflictCheck bool // Default: false (LLM conflict check disabled)
+	MaxFeedsPerCategory    int  // Default: 0 (no limit)
+}
+
+type LLMProvider interface {
+	Chat(ctx context.Context, messages []Message, tools []ToolDefinition, model string, options map[string]interface{}) (*LLMResponse, error)
+	GetDefaultModel() string
+}
+
+type Message struct {
+	Role    string `json:"role"`
+	Content string `json:"content"`
+}
+
+type ToolDefinition struct {
+	Type     string `json:"type"`
+	Function struct {
+		Name        string `json:"name"`
+		Description string `json:"description"`
+		Parameters  any    `json:"parameters"`
+	} `json:"function"`
+}
+
+type LLMResponse struct {
+	Content string
+}
+
+func (s *MonitorSkill) SetLLMProvider(provider LLMProvider) {
+	s.llmProvider = provider
+}
+
+func (s *MonitorSkill) SetLLMConflictCheck(enabled bool) {
+	s.enableLLMConflictCheck = enabled
+}
+
+func (s *MonitorSkill) IsLLMConflictCheckEnabled() bool {
+	return s.enableLLMConflictCheck
 }
 
 // NewSkill creates a new MonitorSkill
 func NewSkill() *MonitorSkill {
 	return newSkillWithDefaults("")
+}
+
+func NewSkillWithConfig(cfg Config) *MonitorSkill {
+	s := newSkillWithDefaults(cfg.DBPath)
+	s.enableLLMConflictCheck = cfg.EnableLLMConflictCheck
+	s.maxFeedsPerCategory = cfg.MaxFeedsPerCategory
+	return s
 }
 
 func NewMonitorSkill(dbPath string) (*MonitorSkill, error) {
@@ -84,7 +142,9 @@ func newSkillWithDefaults(dbPath string) *MonitorSkill {
 		seenURLs:   make(map[string]time.Time),
 		seenTitles: make(map[string]time.Time),
 		seenBodies: make(map[string]time.Time),
+		shownURLs:  make(map[string]int),
 		semaphore:  make(chan struct{}, MaxConcurrentFetch),
+		fetchCount: 0,
 		timeWindows: map[string]time.Duration{
 			"breaking":   TimeWindowBreaking,
 			"bangladesh": TimeWindowBD,
@@ -126,6 +186,37 @@ Categories: breaking, bangladesh, ai_labs, china_ai, robotics, research, defence
 // SetWorkspace sets the workspace directory
 func (s *MonitorSkill) SetWorkspace(ws string) {
 	s.workspace = ws
+	log.Printf("[Monitor] Workspace set to: %s", ws)
+	s.initWorkspace()
+}
+
+func (s *MonitorSkill) initWorkspace() {
+	if s.workspace == "" {
+		return
+	}
+	os.MkdirAll(s.workspace, 0755)
+
+	identityPath := filepath.Join(s.workspace, "IDENTITY.md")
+	if _, err := os.Stat(identityPath); os.IsNotExist(err) {
+		identityContent := `# World Monitor - Identity
+
+- **Name:** Pulse
+- **Creature:** Globe with antenna, scanning news feeds 🌍
+- **Vibe:** Cuts through noise, balanced perspective, "here's what actually matters"
+- **Emoji:** 🌍
+- **Catchphrase:** "Signal detected..."
+`
+		os.WriteFile(identityPath, []byte(identityContent), 0644)
+	}
+
+	heartbeatPath := filepath.Join(s.workspace, "HEARTBEAT.md")
+	if _, err := os.Stat(heartbeatPath); os.IsNotExist(err) {
+		heartbeatContent := `# HEARTBEAT.md
+
+# Keep this file empty (or with only comments) to skip heartbeat API calls.
+`
+		os.WriteFile(heartbeatPath, []byte(heartbeatContent), 0644)
+	}
 }
 
 // Parameters returns the tool parameters
@@ -147,24 +238,75 @@ func (s *MonitorSkill) Parameters() map[string]interface{} {
 				"description": "Max items to return",
 				"default":     10,
 			},
+			"force": map[string]interface{}{
+				"type":        "boolean",
+				"description": "Force fresh fetch (ignore dedup cache, get all new items)",
+				"default":     false,
+			},
 		},
 		"required": []string{"command"},
 	}
 }
 
 // Execute runs the monitor command
-func (s *MonitorSkill) Execute(ctx context.Context, args map[string]interface{}) map[string]interface{} {
+func (s *MonitorSkill) Execute(ctx context.Context, args map[string]interface{}) *tools.ToolResult {
 	command, _ := args["command"].(string)
 
 	switch command {
 	case "fetch":
-		return s.executeFetch(ctx, args)
+		return s.executeFetchTool(ctx, args)
 	case "status":
-		return s.executeStatus(ctx, args)
+		return s.executeStatusTool(ctx, args)
 	case "feeds":
-		return s.executeFeeds(ctx, args)
+		return s.executeFeedsTool(ctx, args)
 	default:
-		return s.errorResult(fmt.Sprintf("unknown command: %s", command))
+		return tools.ErrorResult(fmt.Sprintf("unknown command: %s", command))
+	}
+}
+
+func (s *MonitorSkill) executeFetchTool(ctx context.Context, args map[string]interface{}) *tools.ToolResult {
+	resultMap := s.executeFetch(ctx, args)
+	content := resultMap["for_llm"].(string)
+
+	// Write RFC cache to chief's memory dir — enables Chief morning_brief to read news
+	chiefMem := filepath.Join(filepath.Dir(s.workspace), "chief", "memory")
+	dateKey := time.Now().Format("20060102")
+	newsPath := filepath.Join(chiefMem, "news-"+dateKey+".md")
+
+	if items, ok := resultMap["items"].([]NewsItem); ok && len(items) > 0 {
+		var rfcLines []string
+		for _, item := range items {
+			date := item.PublishedAt.Format("20060102")
+			if date == "" || date == "00010101" {
+				date = dateKey
+			}
+			line := skills.EncodeRecord("news", item.URL, item.TitleRaw, item.Category, date)
+			rfcLines = append(rfcLines, line)
+		}
+		_ = skills.WriteRFCFile(newsPath, "monitor", "6h", rfcLines)
+	}
+
+	return &tools.ToolResult{
+		ForLLM:  content,
+		ForUser: content,
+	}
+}
+
+func (s *MonitorSkill) executeStatusTool(ctx context.Context, args map[string]interface{}) *tools.ToolResult {
+	result := s.executeStatus(ctx, args)
+	content := result["for_llm"].(string)
+	return &tools.ToolResult{
+		ForLLM:  content,
+		ForUser: content,
+	}
+}
+
+func (s *MonitorSkill) executeFeedsTool(ctx context.Context, args map[string]interface{}) *tools.ToolResult {
+	result := s.executeFeeds(ctx, args)
+	content := result["for_llm"].(string)
+	return &tools.ToolResult{
+		ForLLM:  content,
+		ForUser: content,
 	}
 }
 
@@ -201,49 +343,223 @@ func (s *MonitorSkill) executeFetch(ctx context.Context, args map[string]interfa
 		}
 	}
 
+	if s.maxFeedsPerCategory > 0 && len(feedsToFetch) > s.maxFeedsPerCategory {
+		feedsToFetch = feedsToFetch[:s.maxFeedsPerCategory]
+	}
+
 	if len(feedsToFetch) == 0 {
 		return s.errorResult("no active feeds found")
 	}
 
 	var allItems []NewsItem
-	var wg sync.WaitGroup
 	var mu sync.Mutex
 
-	for _, feed := range feedsToFetch {
-		wg.Add(1)
-		go func(f Feed) {
-			defer wg.Done()
-			s.semaphore <- struct{}{}
-			defer func() { <-s.semaphore }()
-
-			items, err := s.fetchFeed(f)
-			mu.Lock()
-			if err == nil {
-				allItems = append(allItems, items...)
-			}
-			mu.Unlock()
-		}(feed)
+	g, gCtx := errgroup.WithContext(ctx)
+	if MaxConcurrentFetch > 0 {
+		g.SetLimit(MaxConcurrentFetch)
 	}
-	wg.Wait()
+
+	for _, feed := range feedsToFetch {
+		feed := feed
+		g.Go(func() (err error) {
+			defer func() {
+				if r := recover(); r != nil {
+					err = fmt.Errorf("monitor fetch panic on %s: %v", feed.URL, r)
+				}
+			}()
+
+			items, fetchErr := s.fetchFeed(gCtx, feed)
+			if fetchErr != nil {
+				log.Printf("[Monitor] ERROR fetching feed %s (%s): %v", feed.Name, feed.URL, fetchErr)
+				return fetchErr
+			}
+
+			mu.Lock()
+			allItems = append(allItems, items...)
+			mu.Unlock()
+			return nil
+		})
+	}
+
+	if err := g.Wait(); err != nil {
+		log.Printf("[Monitor] Fetch encountered early cancellation: %v", err)
+	}
+
+	s.mu.Lock()
+	s.fetchCount++
+	currentFetch := s.fetchCount
+	s.mu.Unlock()
 
 	var deduped []NewsItem
+	var rotated []NewsItem
+
 	for _, item := range allItems {
-		if dup := s.checkDuplicate(&item); dup == nil {
+
+		isNew := s.checkDuplicate(&item) == nil
+
+		if isNew {
+			if s.enableLLMConflictCheck && s.llmProvider != nil {
+				if dup := s.checkLLMConflict(ctx, &item); dup != nil {
+					continue
+				}
+			}
 			deduped = append(deduped, item)
-			s.markSeen(&item)
+		} else {
+			// Regardless of when it was shown, we can use it for rotation if needed
+			// Let's rely on time windows instead of strict fetch counts for rotation
+			rotated = append(rotated, item)
 		}
 	}
 
-	if len(deduped) > limit {
-		deduped = deduped[:limit]
+	// Shuffle to mix from different sources (not just first feed)
+	if len(deduped) > 1 {
+		for i := range deduped {
+			j := (currentFetch + i) % len(deduped)
+			deduped[i], deduped[j] = deduped[j], deduped[i]
+		}
+	}
+	if len(rotated) > 1 {
+		for i := range rotated {
+			j := (currentFetch + i) % len(rotated)
+			rotated[i], rotated[j] = rotated[j], rotated[i]
+		}
 	}
 
-	s.saveItems(deduped)
+	// Implement true round-robin per-source to ensure one source doesn't dominate
+	var finalDeduped []NewsItem
+	itemsBySource := make(map[string][]NewsItem)
+	var sources []string
+
+	for _, item := range deduped {
+		if len(itemsBySource[item.Source]) == 0 {
+			sources = append(sources, item.Source)
+		}
+		itemsBySource[item.Source] = append(itemsBySource[item.Source], item)
+	}
+
+	for len(finalDeduped) < len(deduped) && len(sources) > 0 {
+		var nextSources []string
+		for _, source := range sources {
+			if len(itemsBySource[source]) > 0 {
+				finalDeduped = append(finalDeduped, itemsBySource[source][0])
+				itemsBySource[source] = itemsBySource[source][1:]
+				if len(itemsBySource[source]) > 0 {
+					nextSources = append(nextSources, source)
+				}
+			}
+		}
+		sources = nextSources
+	}
+	deduped = finalDeduped
+
+	s.mu.Lock()
+	for _, item := range deduped {
+		s.shownURLs[item.CanonicalURL] = currentFetch
+		s.markSeen(&item)
+		s.addToRecent(&item)
+	}
+	s.mu.Unlock()
+
+	var allResults []NewsItem
+
+	// If we don't have enough new items, aggressively use rotated items
+	if len(deduped) < limit {
+		allResults = append(allResults, deduped...)
+		needed := limit - len(deduped)
+
+		var eligibleRotated []NewsItem
+		rotItemsBySource := make(map[string][]NewsItem)
+		var rotSources []string
+
+		for _, item := range rotated {
+			s.mu.Lock()
+			shownAt, wasShown := s.shownURLs[item.CanonicalURL]
+			s.mu.Unlock()
+
+			// If it wasn't shown, or was shown at least 1 fetch ago, it's eligible
+			if !wasShown || (currentFetch-shownAt) >= 1 {
+				if len(rotItemsBySource[item.Source]) == 0 {
+					rotSources = append(rotSources, item.Source)
+				}
+				rotItemsBySource[item.Source] = append(rotItemsBySource[item.Source], item)
+			}
+		}
+
+		// Round-robin for rotated items too
+		for len(eligibleRotated) < needed && len(rotSources) > 0 {
+			var nextRotSources []string
+			for _, source := range rotSources {
+				if len(rotItemsBySource[source]) > 0 && len(eligibleRotated) < needed {
+					eligibleRotated = append(eligibleRotated, rotItemsBySource[source][0])
+					rotItemsBySource[source] = rotItemsBySource[source][1:]
+					if len(rotItemsBySource[source]) > 0 {
+						nextRotSources = append(nextRotSources, source)
+					}
+				}
+			}
+			rotSources = nextRotSources
+		}
+
+		allResults = append(allResults, eligibleRotated...)
+
+		s.mu.Lock()
+		for _, item := range eligibleRotated {
+			s.shownURLs[item.CanonicalURL] = currentFetch
+		}
+		s.mu.Unlock()
+
+		// If STILL not enough, ignore maxPerSource for rotated items
+		if len(allResults) < limit {
+			stillNeeded := limit - len(allResults)
+			var desperateRotated []NewsItem
+
+			// Find rotated items we haven't picked yet
+			for _, item := range rotated {
+				picked := false
+				for _, r := range allResults {
+					if r.CanonicalURL == item.CanonicalURL {
+						picked = true
+						break
+					}
+				}
+				if !picked {
+					s.mu.Lock()
+					shownAt, wasShown := s.shownURLs[item.CanonicalURL]
+					s.mu.Unlock()
+					if !wasShown || (currentFetch-shownAt) >= 1 {
+						desperateRotated = append(desperateRotated, item)
+					}
+				}
+			}
+
+			if len(desperateRotated) > 0 {
+				if stillNeeded > len(desperateRotated) {
+					stillNeeded = len(desperateRotated)
+				}
+				allResults = append(allResults, desperateRotated[:stillNeeded]...)
+				s.mu.Lock()
+				for _, item := range desperateRotated[:stillNeeded] {
+					s.shownURLs[item.CanonicalURL] = currentFetch
+				}
+				s.mu.Unlock()
+			}
+		}
+
+	} else {
+		// We have enough new items
+		allResults = deduped
+		if len(allResults) > limit {
+			allResults = allResults[:limit]
+		}
+	}
+
+	s.saveItems(allResults)
 	s.persistDedupCache()
 
 	return map[string]interface{}{
-		"for_llm":  s.formatResults(deduped),
-		"for_user": s.formatResults(deduped),
+		"for_llm":  s.formatResults(allResults),
+		"for_user": s.formatResults(allResults),
+		"items":    allResults,
 		"error":    false,
 	}
 }
@@ -299,27 +615,22 @@ func (s *MonitorSkill) executeFeeds(ctx context.Context, args map[string]interfa
 	}
 }
 
-func (s *MonitorSkill) fetchFeed(feed Feed) ([]NewsItem, error) {
-	parser := gofeed.NewParser()
-	parser.Client = &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: nil,
-		},
-	}
-	parser.Client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
-		return http.ErrUseLastResponse
-	}
+func (s *MonitorSkill) fetchFeed(ctx context.Context, feed Feed) ([]NewsItem, error) {
+	fp := gofeed.NewParser()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	reqCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
-	gf, err := parser.ParseURLWithContext(feed.URL, ctx)
+	// Temporarily logging feed fetch to see why they are failing
+	// log.Printf("[Monitor] Fetching: %s", feed.URL)
+
+	feedData, err := fp.ParseURLWithContext(feed.URL, reqCtx)
 	if err != nil {
-		return nil, fmt.Errorf("parse %s: %w", feed.URL, err)
+		return nil, fmt.Errorf("fetch %s: %w", feed.URL, err)
 	}
 
 	var items []NewsItem
-	for _, item := range gf.Items {
+	for _, item := range feedData.Items {
 		newsItem := s.normalizeItem(item, feed)
 		if newsItem != nil {
 			items = append(items, *newsItem)
@@ -444,6 +755,9 @@ func (s *MonitorSkill) generateID(parts ...string) string {
 func (s *MonitorSkill) checkDuplicate(item *NewsItem) *NewsItem {
 	now := time.Now()
 
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
 	if dupe, ok := s.seenURLs[item.CanonicalURL]; ok && now.Sub(dupe) < 7*24*time.Hour {
 		return &NewsItem{ID: "url-dup"}
 	}
@@ -468,6 +782,93 @@ func (s *MonitorSkill) checkDuplicate(item *NewsItem) *NewsItem {
 	}
 
 	return nil
+}
+
+func (s *MonitorSkill) checkLLMConflict(ctx context.Context, item *NewsItem) *NewsItem {
+	if s.llmProvider == nil {
+		return nil
+	}
+
+	recent := s.getRecentItems(item.Category, 10)
+	if len(recent) == 0 {
+		return nil
+	}
+
+	prompt := s.buildConflictPrompt(item, recent)
+
+	resp, err := s.llmProvider.Chat(
+		ctx,
+		[]Message{{Role: "user", Content: prompt}},
+		nil,
+		s.llmProvider.GetDefaultModel(),
+		map[string]interface{}{"temperature": 0.3},
+	)
+	if err != nil {
+		return nil
+	}
+
+	if isDuplicateResponse(resp.Content) {
+		return &NewsItem{ID: "llm-dup", TitleNormal: "llm-conflict"}
+	}
+	return nil
+}
+
+func (s *MonitorSkill) getRecentItems(category string, limit int) []NewsItem {
+	var filtered []NewsItem
+	for _, item := range s.recentItems {
+		if item.Category == category {
+			filtered = append(filtered, item)
+			if len(filtered) >= limit {
+				break
+			}
+		}
+	}
+	return filtered
+}
+
+func (s *MonitorSkill) buildConflictPrompt(item *NewsItem, recent []NewsItem) string {
+	var b strings.Builder
+	b.WriteString("You are a news deduplication assistant. Determine if the new article is a duplicate of any recent articles.\n\n")
+
+	b.WriteString("Recent articles in the same category:\n")
+	for i, recent := range recent {
+		b.WriteString(fmt.Sprintf("%d. [%s] %s\n", i+1, recent.Source, recent.TitleRaw))
+		if recent.Summary != "" {
+			b.WriteString(fmt.Sprintf("   Summary: %s\n", truncateString(recent.Summary, 200)))
+		}
+	}
+
+	b.WriteString("\nNew article to check:\n")
+	b.WriteString(fmt.Sprintf("Title: %s\n", item.TitleRaw))
+	if item.Summary != "" {
+		b.WriteString(fmt.Sprintf("Summary: %s\n", truncateString(item.Summary, 200)))
+	}
+	b.WriteString(fmt.Sprintf("Source: %s\n", item.Source))
+
+	b.WriteString("\nRespond with ONLY 'YES' if the new article covers the exact same event/announcement as any recent article (even if worded differently or translated into another language like Bengali vs English), or 'NO' if it's a different story.\n")
+	b.WriteString("Consider: same company announcing something, same research paper, same government action, same incident etc.\n")
+	b.WriteString("Answer:")
+
+	return b.String()
+}
+
+func isDuplicateResponse(response string) bool {
+	resp := strings.ToUpper(strings.TrimSpace(response))
+	return strings.HasPrefix(resp, "YES")
+}
+
+func truncateString(s string, maxLen int) string {
+	if len(s) <= maxLen {
+		return s
+	}
+	return s[:maxLen] + "..."
+}
+
+func (s *MonitorSkill) addToRecent(item *NewsItem) {
+	s.recentItems = append([]NewsItem{*item}, s.recentItems...)
+	if len(s.recentItems) > 100 {
+		s.recentItems = s.recentItems[:100]
+	}
 }
 
 // computeSimilarityScore returns similarity score (0-100) between two titles.
@@ -620,6 +1021,8 @@ func (s *MonitorSkill) loadDedupCache() {
 	for _, b := range bodies {
 		s.seenBodies[b.Hash] = b.SeenAt
 	}
+
+	s.recentItems = s.db.GetRecentItems("", 50)
 }
 
 func (s *MonitorSkill) formatResults(items []NewsItem) string {
@@ -661,8 +1064,12 @@ func (s *MonitorSkill) loadFeeds() {
 	}
 
 	opmlPath := filepath.Join(s.workspace, "feeds.opml")
+	log.Printf("[Monitor] Loading feeds from: %s", opmlPath)
 	if _, err := os.Stat(opmlPath); err == nil {
 		s.feeds = s.parseOPML(opmlPath)
+		log.Printf("[Monitor] Loaded %d feeds from OPML", len(s.feeds))
+	} else {
+		log.Printf("[Monitor] OPML not found at %s, using defaults", opmlPath)
 	}
 
 	if len(s.feeds) == 0 {
@@ -677,50 +1084,52 @@ func (s *MonitorSkill) loadFeeds() {
 	}
 }
 
+type opmlOutline struct {
+	XMLName  xml.Name      `xml:"outline"`
+	Type     string        `xml:"type,attr"`
+	Text     string        `xml:"text,attr"`
+	Title    string        `xml:"title,attr"`
+	XMLURL   string        `xml:"xmlUrl,attr"`
+	Category string        `xml:"category,attr"`
+	Outlines []opmlOutline `xml:"outline"`
+}
+
+type opmlBody struct {
+	Outlines []opmlOutline `xml:"outline"`
+}
+
+type opmlDoc struct {
+	XMLName xml.Name `xml:"opml"`
+	Body    opmlBody `xml:"body"`
+}
+
 func (s *MonitorSkill) parseOPML(path string) []Feed {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil
 	}
 
-	type OPMLHead struct {
-		Title string `xml:"title"`
-	}
-
-	type OPMLOutline struct {
-		XMLName  xml.Name      `xml:"outline"`
-		Type     string        `xml:"type"`
-		Text     string        `xml:"text"`
-		Title    string        `xml:"title"`
-		XMLURL   string        `xml:"xmlUrl"`
-		Category string        `xml:"category"`
-		Outlines []OPMLOutline `xml:"outline"`
-	}
-
-	type OPMLBody struct {
-		Outlines []OPMLOutline `xml:"outline"`
-	}
-
-	type OPML struct {
-		XMLName xml.Name `xml:"opml"`
-		Head    OPMLHead `xml:"head"`
-		Body    OPMLBody `xml:"body"`
-	}
-
-	var opml OPML
+	var opml opmlDoc
 	if err := xml.Unmarshal(data, &opml); err != nil {
 		return nil
 	}
 
 	var feeds []Feed
-	for _, outline := range opml.Body.Outlines {
+	s.parseOPMLOutlines(opml.Body.Outlines, "", &feeds)
+	return feeds
+}
+
+func (s *MonitorSkill) parseOPMLOutlines(outlines []opmlOutline, parentCategory string, feeds *[]Feed) {
+	for _, outline := range outlines {
+		category := s.mapCategory(outline.Text, outline.Title, parentCategory)
+
 		if outline.XMLURL != "" {
-			category := outline.Category
-			if category == "" {
-				category = "default"
+			name := outline.Title
+			if name == "" {
+				name = outline.Text
 			}
-			feeds = append(feeds, Feed{
-				Name:     outline.Title,
+			*feeds = append(*feeds, Feed{
+				Name:     name,
 				URL:      outline.XMLURL,
 				Category: category,
 				Tier:     2,
@@ -728,9 +1137,46 @@ func (s *MonitorSkill) parseOPML(path string) []Feed {
 				Active:   true,
 			})
 		}
+
+		if len(outline.Outlines) > 0 {
+			s.parseOPMLOutlines(outline.Outlines, category, feeds)
+		}
+	}
+}
+
+func (s *MonitorSkill) mapCategory(text, title, parent string) string {
+	lowerText := strings.ToLower(text)
+	lowerTitle := strings.ToLower(title)
+	combined := lowerText + " " + lowerTitle
+	lowerParent := strings.ToLower(parent)
+
+	if strings.Contains(combined, "bangladesh") || strings.Contains(combined, " bd ") || strings.Contains(lowerParent, "bangladesh") {
+		return "bangladesh"
+	}
+	if strings.Contains(combined, "breaking") || strings.Contains(combined, "wire") || strings.Contains(combined, "reuters") || strings.Contains(combined, "ap ") || strings.Contains(combined, "bbc") {
+		return "breaking"
+	}
+	if strings.Contains(combined, "ai") || strings.Contains(combined, "llm") || strings.Contains(combined, "model") || strings.Contains(combined, "gpt") || strings.Contains(combined, "gemini") || strings.Contains(combined, "claude") {
+		return "ai_labs"
+	}
+	if strings.Contains(combined, "china") || strings.Contains(combined, "chinese") {
+		return "china_ai"
+	}
+	if strings.Contains(combined, "robot") || strings.Contains(combined, "humanoid") || strings.Contains(combined, "drone") || strings.Contains(combined, "autonomous vehicle") {
+		return "robotics"
+	}
+	if strings.Contains(combined, "defence") || strings.Contains(combined, "defense") || strings.Contains(combined, "military") || strings.Contains(combined, "security") {
+		return "defence"
+	}
+	if strings.Contains(combined, "research") || strings.Contains(combined, "arxiv") || strings.Contains(combined, "academic") || strings.Contains(combined, "paper") {
+		return "research"
 	}
 
-	return feeds
+	if parent != "" {
+		return s.mapCategory(parent, "", "") // Recurse to map parent category
+	}
+
+	return "default"
 }
 
 func (s *MonitorSkill) errorResult(msg string) map[string]interface{} {

@@ -124,12 +124,13 @@ func (sm *SubagentManager) Spawn(ctx context.Context, task, label string, agentT
 	sm.tasks[taskID] = subagentTask
 	sm.mu.Unlock()
 
-	go sm.runTask(ctx, subagentTask)
+	sm.runTask(ctx, subagentTask)
 
-	if label != "" {
-		return fmt.Sprintf("Spawned subagent '%s' (%s) for task: %s", label, agentType, task), nil
-	}
-	return fmt.Sprintf("Spawned subagent (%s) for task: %s", agentType, task), nil
+	sm.mu.RLock()
+	finalResult := sm.tasks[taskID].Result
+	sm.mu.RUnlock()
+
+	return finalResult, nil
 }
 
 func (sm *SubagentManager) runTask(ctx context.Context, task *SubagentTask) {

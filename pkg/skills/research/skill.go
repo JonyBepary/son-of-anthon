@@ -14,8 +14,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/jony/son-of-anthon/pkg/skills"
 	"github.com/mtreilly/goarxiv"
 	"github.com/sipeed/picoclaw/pkg/tools"
+	"golang.org/x/net/html"
 )
 
 const (
@@ -175,6 +177,36 @@ func (s *ResearchSkill) Parameters() map[string]interface{} {
 
 func (s *ResearchSkill) SetWorkspace(workspace string) {
 	s.workspace = workspace
+	s.initWorkspace()
+}
+
+func (s *ResearchSkill) initWorkspace() {
+	if s.workspace == "" {
+		return
+	}
+	os.MkdirAll(s.workspace, 0755)
+
+	identityPath := filepath.Join(s.workspace, "IDENTITY.md")
+	if _, err := os.Stat(identityPath); os.IsNotExist(err) {
+		identityContent := `# Research Scout - Identity
+
+- **Name:** Scout
+- **Creature:** Academic owl with reading glasses 🦉
+- **Vibe:** Nerdy enthusiasm, citation-obsessed, "did you see this paper?!"
+- **Emoji:** 🔬
+- **Catchphrase:** "Found something fascinating..."
+`
+		os.WriteFile(identityPath, []byte(identityContent), 0644)
+	}
+
+	heartbeatPath := filepath.Join(s.workspace, "HEARTBEAT.md")
+	if _, err := os.Stat(heartbeatPath); os.IsNotExist(err) {
+		heartbeatContent := `# HEARTBEAT.md
+
+# Keep this file empty (or with only comments) to skip heartbeat API calls.
+`
+		os.WriteFile(heartbeatPath, []byte(heartbeatContent), 0644)
+	}
 }
 
 func (s *ResearchSkill) Execute(ctx context.Context, args map[string]interface{}) *tools.ToolResult {
@@ -200,24 +232,30 @@ func (s *ResearchSkill) executeFetch(ctx context.Context, args map[string]interf
 	}
 	includeArxiv, _ := args["include_arxiv"].(bool)
 
-	// Use ArXiv by default for better abstracts, optionally add HuggingFace
+	// Primary source: HuggingFace (trending papers)
 	var papers []Paper
 
-	// Fetch from ArXiv (primary - gives abstracts)
-	arxivPapers := s.fetchArxiv(topic, 10)
-	papers = append(papers, arxivPapers...)
+	hfPapers := s.fetchHuggingFace(topic, timeframe)
+	papers = append(papers, hfPapers...)
 
-	// Optionally add HuggingFace (for trending)
+	// Optionally add ArXiv (as supplement)
 	if includeArxiv {
-		hfPapers := s.fetchHuggingFace(topic, timeframe)
+		arxivPapers := s.fetchArxiv(topic, 10)
 		// Merge, avoiding duplicates
 		seen := make(map[string]bool)
 		for _, p := range papers {
-			seen[p.ArxivID] = true
+			if p.ArxivID != "" {
+				seen[p.ArxivID] = true
+			}
 		}
-		for _, p := range hfPapers {
-			if !seen[p.ArxivID] {
+		for _, p := range arxivPapers {
+			id := p.ArxivID
+			if id == "" {
+				id = p.Title
+			}
+			if !seen[id] {
 				papers = append(papers, p)
+				seen[id] = true
 			}
 		}
 	}
@@ -304,10 +342,14 @@ func (s *ResearchSkill) executeDownload(ctx context.Context, args map[string]int
 	// Generate filename
 	var filename string
 	if paperTitle != "" {
-		filename = fmt.Sprintf("%s_%s.pdf", paperID, sanitizeFilename(paperTitle))
+		safeTitle := sanitizeFilename(paperTitle)
+		filename = fmt.Sprintf("%s_%s.pdf", paperID, safeTitle)
 	} else {
 		filename = fmt.Sprintf("%s.pdf", paperID)
 	}
+
+	// Double check path traversal protection
+	filename = filepath.Base(filepath.Clean("/" + filename))
 	filepath := filepath.Join(s.workspace, filename)
 
 	if err := s.downloadFile(pdfURL, filepath); err != nil {
@@ -401,94 +443,61 @@ func (s *ResearchSkill) fetchHuggingFace(topic, timeframe string) []Paper {
 	return s.parseHuggingFaceHTML(string(body))
 }
 
-func (s *ResearchSkill) parseHuggingFaceHTML(html string) []Paper {
+func (s *ResearchSkill) parseHuggingFaceHTML(htmlContent string) []Paper {
 	var papers []Paper
 
-	// HuggingFace papers page has paper IDs in /papers/ARXIV_ID format
-	// Get all unique paper IDs
-	idRe := regexp.MustCompile(`href="/papers/([0-9]+\.[0-9]+)"`)
-	idMatches := idRe.FindAllStringSubmatch(html, -1)
+	doc, err := html.Parse(strings.NewReader(htmlContent))
+	if err != nil {
+		return papers
+	}
 
-	seen := make(map[string]bool)
-	var paperIDs []string
-	for _, m := range idMatches {
-		if len(m) > 1 {
-			id := m[1]
-			if !seen[id] {
-				seen[id] = true
-				paperIDs = append(paperIDs, id)
+	seenIDs := make(map[string]bool)
+
+	var walk func(*html.Node)
+	walk = func(n *html.Node) {
+		// Stop if we hit 10 papers
+		if len(papers) >= 10 {
+			return
+		}
+
+		if n.Type == html.ElementNode && n.Data == "div" {
+			// Find paper cards
+			hasFlexCol := false
+			hasJustifyBetween := false
+			for _, attr := range n.Attr {
+				if attr.Key == "class" {
+					if strings.Contains(attr.Val, "flex-col") {
+						hasFlexCol = true
+					}
+					if strings.Contains(attr.Val, "justify-between") {
+						hasJustifyBetween = true
+					}
+				}
 			}
-		}
-	}
 
-	// Get titles from various patterns
-	titleRe := regexp.MustCompile(`<h3[^>]*>([^<]+)</h3>`)
-	titleMatches := titleRe.FindAllStringSubmatch(html, -1)
-
-	// Get dates
-	dateRe := regexp.MustCompile(`(\d{4}-\d{2}-\d{2})`)
-	dateMatches := dateRe.FindAllString(html, -1)
-
-	// Get abstracts - try multiple patterns
-	abstractPatterns := []string{
-		`class="text-gray-500[^"]*"[^>]*>([^<]+)</p>`,
-		`class="line-clamp-3[^"]*"[^>]*>([^<]+)</p>`,
-		`<p[^>]*>([^<]{50,200})</p>`,
-	}
-	var abstracts []string
-	for _, pattern := range abstractPatterns {
-		absRe := regexp.MustCompile(pattern)
-		abs := absRe.FindAllStringSubmatch(html, -1)
-		for _, a := range abs {
-			if len(a) > 1 && len(a[1]) > 30 {
-				abstracts = append(abstracts, a[1])
-			}
-		}
-		if len(abstracts) >= len(paperIDs) {
-			break
-		}
-	}
-
-	// Build papers list
-	for i, arxivID := range paperIDs {
-		if i >= 10 {
-			break
-		}
-
-		paper := Paper{
-			Title:         fmt.Sprintf("Paper %s", arxivID),
-			URL:           fmt.Sprintf("https://arxiv.org/abs/%s", arxivID),
-			ArxivID:       arxivID,
-			Source:        "huggingface",
-			PublishedDate: "Unknown",
-		}
-
-		// Try to get title
-		if i < len(titleMatches) && len(titleMatches[i]) > 1 {
-			title := strings.TrimSpace(titleMatches[i][1])
-			title = strings.ReplaceAll(title, "<span class=\"highlight\">", "")
-			title = strings.ReplaceAll(title, "</span>", "")
-			if len(title) > 5 {
-				paper.Title = title
+			if hasFlexCol && hasJustifyBetween {
+				// We found a paper card. Extract data.
+				paper := s.extractPaperFromCard(n)
+				if paper != nil && !seenIDs[paper.ArxivID] {
+					seenIDs[paper.ArxivID] = true
+					papers = append(papers, *paper)
+				}
 			}
 		}
 
-		// Try to get date
-		if i < len(dateMatches) {
-			paper.PublishedDate = dateMatches[i]
+		for c := n.FirstChild; c != nil; c = c.NextSibling {
+			walk(c)
 		}
-
-		// Try to get abstract
-		if i < len(abstracts) {
-			paper.Abstract = strings.TrimSpace(abstracts[i])
-		}
-
-		papers = append(papers, paper)
 	}
+	walk(doc)
 
 	// If we got papers but no abstracts, fetch abstracts from ArXiv for each
 	if len(papers) > 0 && papers[0].Abstract == "" {
-		// Fetch from ArXiv to get abstracts
+		var paperIDs []string
+		for _, p := range papers {
+			paperIDs = append(paperIDs, p.ArxivID)
+		}
+
 		if len(paperIDs) > 0 {
 			arxivPapers := s.fetchArxivByIDs(paperIDs[:min(5, len(paperIDs))])
 			for i, ap := range arxivPapers {
@@ -504,14 +513,125 @@ func (s *ResearchSkill) parseHuggingFaceHTML(html string) []Paper {
 	return papers
 }
 
+func (s *ResearchSkill) extractPaperFromCard(cardNode *html.Node) *Paper {
+	var title, arxivID, abstract, pubDate string
+	var paperURL string
+
+	// Extract Title and ID
+	var findTitle func(*html.Node)
+	findTitle = func(n *html.Node) {
+		if n.Type == html.ElementNode && n.Data == "h3" {
+			for c := n.FirstChild; c != nil; c = c.NextSibling {
+				if c.Type == html.ElementNode && c.Data == "a" {
+					for _, attr := range c.Attr {
+						if attr.Key == "href" && strings.Contains(attr.Val, "/papers/") {
+							parts := strings.Split(attr.Val, "/")
+							if len(parts) > 0 {
+								potentialID := parts[len(parts)-1]
+								if matched, _ := regexp.MatchString(`^\d{4}\.\d{4,5}$`, potentialID); matched {
+									arxivID = potentialID
+									paperURL = fmt.Sprintf("https://arxiv.org/abs/%s", arxivID)
+								}
+							}
+							title = s.extractText(c)
+						}
+					}
+				}
+			}
+		}
+		for c := n.FirstChild; c != nil; c = c.NextSibling {
+			findTitle(c)
+		}
+	}
+	findTitle(cardNode)
+
+	if arxivID == "" || title == "" || len(title) < 10 {
+		return nil
+	}
+
+	// Extract Abstract
+	var findAbstract func(*html.Node)
+	findAbstract = func(n *html.Node) {
+		if n.Type == html.ElementNode && n.Data == "p" {
+			for _, attr := range n.Attr {
+				if attr.Key == "class" && strings.Contains(attr.Val, "text-gray-500") {
+					abstract = s.extractText(n)
+					if len(abstract) > 500 {
+						abstract = abstract[:500]
+					}
+				}
+			}
+		}
+		for c := n.FirstChild; c != nil; c = c.NextSibling {
+			findAbstract(c)
+		}
+	}
+	findAbstract(cardNode)
+
+	// Extract Date
+	var findDate func(*html.Node)
+	findDate = func(n *html.Node) {
+		if n.Type == html.ElementNode && n.Data == "date" {
+			for _, attr := range n.Attr {
+				if attr.Key == "class" && strings.Contains(attr.Val, "text-gray-350") {
+					pubDate = s.extractText(n)
+				}
+			}
+		}
+		for c := n.FirstChild; c != nil; c = c.NextSibling {
+			findDate(c)
+		}
+	}
+	findDate(cardNode)
+
+	if pubDate == "" {
+		pubDate = "Unknown"
+	}
+
+	return &Paper{
+		Title:         title,
+		URL:           paperURL,
+		ArxivID:       arxivID,
+		Source:        "huggingface",
+		PublishedDate: pubDate,
+		Abstract:      abstract,
+	}
+}
+
+func (s *ResearchSkill) extractText(n *html.Node) string {
+	if n.Type == html.TextNode {
+		// Clean up spacing and whitespace
+		return strings.TrimSpace(n.Data)
+	}
+
+	var text strings.Builder
+	for c := n.FirstChild; c != nil; c = c.NextSibling {
+		childText := s.extractText(c)
+		if childText != "" {
+			if text.Len() > 0 {
+				text.WriteString(" ")
+			}
+			text.WriteString(childText)
+		}
+	}
+	// Final clean of internal double spaces that might occur
+	return strings.Join(strings.Fields(text.String()), " ")
+}
+
 func (s *ResearchSkill) fetchArxiv(topic string, maxResults int) []Paper {
 	client, err := goarxiv.New()
 	if err != nil {
 		return nil
 	}
 
+	// Format query to enforce phrase matching if it contains spaces
+	query := topic
+	if strings.Contains(query, " ") && !strings.HasPrefix(query, "\"") {
+		query = fmt.Sprintf("\"%s\"", query)
+	}
+
 	ctx := context.Background()
-	results, err := client.Search(ctx, fmt.Sprintf("all:%s", topic), &goarxiv.SearchOptions{
+	results, err := client.Search(ctx, fmt.Sprintf("all:%s", query), &goarxiv.SearchOptions{
 		MaxResults: maxResults,
 	})
 	if err != nil {
@@ -631,39 +751,24 @@ func (s *ResearchSkill) saveToMemory(papers []Paper, query string) {
 		return
 	}
 
-	memoryDir := filepath.Join(s.workspace, "memory")
-	os.MkdirAll(memoryDir, 0755)
+	// Derive chief memory dir from research workspace
+	chiefMem := filepath.Join(filepath.Dir(s.workspace), "chief", "memory")
+	dateKey := time.Now().Format("20060102")
+	researchPath := filepath.Join(chiefMem, "research-"+dateKey+".md")
 
-	memoryPath := filepath.Join(memoryDir, "research-papers.md")
-	f, err := os.OpenFile(memoryPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		return
-	}
-	defer f.Close()
-
-	// Write header if new file
-	if stat, _ := f.Stat(); stat.Size() == 0 {
-		f.WriteString("# Research Scout Findings\n\n")
-	}
-
-	f.WriteString(fmt.Sprintf("## Query: %s (%s)\n\n", query, time.Now().Format("2006-01-02 15:04")))
-
+	var rfcLines []string
 	for _, p := range papers {
-		f.WriteString(fmt.Sprintf("### %s\n", p.Title))
-		f.WriteString(fmt.Sprintf("- **ID**: %s\n", p.ID))
-		f.WriteString(fmt.Sprintf("- **Source**: %s\n", p.Source))
-		f.WriteString(fmt.Sprintf("- **Rank**: %s\n", p.CoreRank))
-		f.WriteString(fmt.Sprintf("- **URL**: %s\n", p.URL))
-		f.WriteString(fmt.Sprintf("- **Date**: %s\n", p.PublishedDate))
-		if p.Abstract != "" {
-			abstract := p.Abstract
-			if len(abstract) > 200 {
-				abstract = abstract[:200] + "..."
-			}
-			f.WriteString(fmt.Sprintf("- **Abstract**: %s\n", abstract))
+		date := strings.ReplaceAll(p.PublishedDate, "-", "")
+		if len(date) > 8 {
+			date = date[:8]
 		}
-		f.WriteString("\n")
+		if date == "" {
+			date = dateKey
+		}
+		line := skills.EncodeRecord("paper", p.URL, p.Title, query, date)
+		rfcLines = append(rfcLines, line)
 	}
+	_ = skills.WriteRFCFile(researchPath, "research", "24h", rfcLines)
 }
 
 func (s *ResearchSkill) checkFileSize(url string) (int64, error) {

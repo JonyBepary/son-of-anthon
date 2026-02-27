@@ -1,0 +1,56 @@
+{
+  "agents": {
+    "defaults": {
+      "max_tokens": 8192,
+      "max_tool_iterations": 20,
+      "model": "qwen/qwen3.5-397b-a17b",
+      "provider": "qwen",
+      "restrict_to_workspace": true,
+      "temperature": 0.7
+    }
+  },
+  "channels": {
+    "telegram": {
+      "allow_from": ["YOUR_CHAT_ID"],
+      "enabled": false,
+      "token": "YOUR_TELEGRAM_BOT_TOKEN"
+    }
+  },
+  "heartbeat": {
+    "enabled": true,
+    "interval": 30
+  },
+  "model_list": [
+    {
+      "provider": "qwen",
+      "model": "qwen/qwen3.5-397b-a17b",
+      "model_name": "qwen/qwen3.5-397b-a17b",
+      "api_key": "YOUR_NVIDIA_API_KEY",
+      "api_base": "https://integrate.api.nvidia.com/v1"
+    }
+  ],
+  "providers": {
+    "qwen": {
+      "api_key": "YOUR_NVIDIA_API_KEY",
+      "api_base": "https://integrate.api.nvidia.com/v1"
+    }
+  },
+  "tools": {
+    "nextcloud": {
+      "host": "",
+      "password": "",
+      "username": ""
+    },
+    "telegram": {
+      "bot_token": "",
+      "chat_id": ""
+    },
+    "web": {
+      "brave": {
+        "api_key": "",
+        "enabled": false,
+        "max_results": 5
+      }
+    }
+  }
+}
