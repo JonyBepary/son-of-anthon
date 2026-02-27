@@ -5,8 +5,8 @@ backups/
 *.log
 
 # Binaries
-son-of-anthon
-son-of-anthon-termux
+/son-of-anthon
+/son-of-anthon-termux
 *.tar.gz
 *.exe
 *.exe~
