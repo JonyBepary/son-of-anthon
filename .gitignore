@@ -6,11 +6,16 @@ backups/
 
 # Binaries
 son-of-anthon
+son-of-anthon-termux
+*.tar.gz
 *.exe
 *.exe~
 *.dll
 *.so
 *.dylib
+
+# Docs (not included in repo)
+docs/
 
 # Database files
 *.db
