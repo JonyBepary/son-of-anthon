@@ -22,9 +22,6 @@ echo "==> Running interactive setup wizard..."
 # The user needs to configure their API keys and settings
 son-of-anthon setup
 
-echo "==> Enabling services on boot..."
-sv-enable
-
 # Create the service directory
 SERVICE_DIR="$PREFIX/var/service/son-of-anthon"
 echo "==> Creating service directory at $SERVICE_DIR..."
@@ -37,7 +34,7 @@ cat << 'EOF' > "$SERVICE_DIR/run"
 #!/data/data/com.termux/files/usr/bin/sh
 exec 2>&1
 export GODEBUG=netdns=go
-exec son-of-anthon gateway
+exec /data/data/com.termux/files/usr/bin/son-of-anthon gateway
 EOF
 
 # Create the log run script
@@ -52,6 +49,9 @@ EOF
 # Make scripts executable
 chmod +x "$SERVICE_DIR/run"
 chmod +x "$SERVICE_DIR/log/run"
+
+echo "==> Enabling service on boot..."
+sv-enable son-of-anthon
 
 echo ""
 echo "✅ Installation and Setup Complete!"
