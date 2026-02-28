@@ -1,3 +1,5 @@
+version: 2
+
 project_name: son-of-anthon
 
 builds:
@@ -76,7 +78,3 @@ nfpms:
 
 checksum:
   name_template: 'checksums.txt'
-
-github:
-  owner: JonyBepary
-  name: son-of-anthon
