@@ -4,7 +4,7 @@
       "max_tokens": 8192,
       "max_tool_iterations": 20,
       "model": "qwen/qwen3.5-397b-a17b",
-      "provider": "nvidia",
+      "provider": "qwen",
       "restrict_to_workspace": true,
       "temperature": 0.7
     }
@@ -22,7 +22,7 @@
   },
   "model_list": [
     {
-      "provider": "nvidia",
+      "provider": "qwen",
       "model": "qwen/qwen3.5-397b-a17b",
       "model_name": "qwen/qwen3.5-397b-a17b",
       "api_key": "YOUR_NVIDIA_API_KEY",
@@ -30,10 +30,22 @@
     }
   ],
   "providers": {
-    "nvidia": {
+    "qwen": {
       "api_key": "YOUR_NVIDIA_API_KEY",
       "api_base": "https://integrate.api.nvidia.com/v1"
     }
+  },
+  "monitor": {
+    "feeds": [
+      {"name": "Reuters", "url": "https://feeds.reuters.com/reuters/topNews", "category": "world", "tier": 1, "lang": "en", "active": true},
+      {"name": "BBC", "url": "http://feeds.bbci.co.uk/news/world/rss.xml", "category": "world", "tier": 1, "lang": "en", "active": true},
+      {"name": "bdnews24", "url": "https://bdnews24.com/rss", "category": "bangladesh", "tier": 1, "lang": "en", "active": true},
+      {"name": "The Daily Star", "url": "https://www.thedailystar.net/rss.xml", "category": "bangladesh", "tier": 1, "lang": "en", "active": true},
+      {"name": "OpenAI", "url": "https://openai.com/news/rss.xml", "category": "tech", "tier": 1, "lang": "en", "active": true},
+      {"name": "TechCrunch", "url": "https://techcrunch.com/feed/", "category": "tech", "tier": 1, "lang": "en", "active": true},
+      {"name": "Hacker News", "url": "https://hnrss.org/frontpage", "category": "tech", "tier": 1, "lang": "en", "active": true},
+      {"name": "arXiv AI", "url": "https://rss.arxiv.org/rss/cs.AI", "category": "ai", "tier": 1, "lang": "en", "active": true}
+    ]
   },
   "tools": {
     "nextcloud": {
@@ -49,7 +61,7 @@
       "brave": {
         "api_key": "",
         "enabled": false,
-        "max_results": 5
+        "max_results": 10
       }
     }
   }

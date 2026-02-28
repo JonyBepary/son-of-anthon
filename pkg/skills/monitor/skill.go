@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"encoding/xml"
 	"fmt"
 	"html"
@@ -146,13 +147,10 @@ func newSkillWithDefaults(dbPath string) *MonitorSkill {
 		semaphore:  make(chan struct{}, MaxConcurrentFetch),
 		fetchCount: 0,
 		timeWindows: map[string]time.Duration{
-			"breaking":   TimeWindowBreaking,
+			"world":      TimeWindowBreaking,
 			"bangladesh": TimeWindowBD,
-			"ai_labs":    TimeWindowAI,
-			"china_ai":   TimeWindowAI,
-			"robotics":   TimeWindowAI,
-			"research":   TimeWindowResearch,
-			"defence":    TimeWindowBD,
+			"tech":       TimeWindowAI,
+			"ai":         TimeWindowAI,
 			"default":    TimeWindowBD,
 		},
 	}
@@ -173,14 +171,16 @@ func (s *MonitorSkill) Name() string {
 
 // Description returns the tool description
 func (s *MonitorSkill) Description() string {
-	return `News Intelligence - Fetch, deduplicate, and rank news from multiple sources.
+	return `News Intelligence - Fetch curated news from configured RSS feeds.
 
 Commands:
-- fetch: Fetch latest news from configured feeds
-- status: Show monitor status and statistics
+- fetch: Fetch latest news from configured feeds (default: top 10 items)
+- status: Show monitor status and statistics  
 - feeds: List configured RSS feeds
 
-Categories: breaking, bangladesh, ai_labs, china_ai, robotics, research, defence`
+Categories: world, bangladesh, tech, ai
+
+Configure feeds in config.json under "monitor" -> "feeds`
 }
 
 // SetWorkspace sets the workspace directory
@@ -1063,25 +1063,74 @@ func (s *MonitorSkill) loadFeeds() {
 		return
 	}
 
-	opmlPath := filepath.Join(s.workspace, "feeds.opml")
-	log.Printf("[Monitor] Loading feeds from: %s", opmlPath)
-	if _, err := os.Stat(opmlPath); err == nil {
-		s.feeds = s.parseOPML(opmlPath)
-		log.Printf("[Monitor] Loaded %d feeds from OPML", len(s.feeds))
-	} else {
-		log.Printf("[Monitor] OPML not found at %s, using defaults", opmlPath)
-	}
-
-	if len(s.feeds) == 0 {
-		s.feeds = []Feed{
-			{Name: "Reuters", URL: "https://feeds.reuters.com/reuters/topNews", Category: "breaking", Tier: 1, Lang: "en", Active: true},
-			{Name: "bdnews24", URL: "https://bdnews24.com/rss", Category: "bangladesh", Tier: 1, Lang: "en", Active: true},
-			{Name: "OpenAI", URL: "https://openai.com/news/rss.xml", Category: "ai_labs", Tier: 1, Lang: "en", Active: true},
-			{Name: "DeepMind", URL: "https://deepmind.google/blog/rss.xml", Category: "ai_labs", Tier: 1, Lang: "en", Active: true},
-			{Name: "HuggingFace", URL: "https://huggingface.co/blog/feed.xml", Category: "ai_labs", Tier: 1, Lang: "en", Active: true},
-			{Name: "arXiv AI", URL: "https://rss.arxiv.org/rss/cs.AI", Category: "research", Tier: 1, Lang: "en", Active: true},
+	// Try to load from config.json first
+	configPath := filepath.Join(filepath.Dir(s.workspace), "..", "config.json")
+	if configPath != "" {
+		if data, err := os.ReadFile(configPath); err == nil {
+			var configData map[string]interface{}
+			if json.Unmarshal(data, &configData) == nil {
+				if monitorCfg, ok := configData["monitor"].(map[string]interface{}); ok {
+					if feedsData, ok := monitorCfg["feeds"].([]interface{}); ok {
+						for _, f := range feedsData {
+							if feedMap, ok := f.(map[string]interface{}); ok {
+								feed := Feed{
+									Name:     getString(feedMap, "name", ""),
+									URL:      getString(feedMap, "url", ""),
+									Category: getString(feedMap, "category", "default"),
+									Lang:     getString(feedMap, "lang", "en"),
+									Active:   true,
+								}
+								if tier, ok := feedMap["tier"].(float64); ok {
+									feed.Tier = int(tier)
+								} else {
+									feed.Tier = 1
+								}
+								if active, ok := feedMap["active"].(bool); ok {
+									feed.Active = active
+								}
+								if feed.URL != "" {
+									s.feeds = append(s.feeds, feed)
+								}
+							}
+						}
+						log.Printf("[Monitor] Loaded %d feeds from config.json", len(s.feeds))
+					}
+				}
+			}
 		}
 	}
+
+	// Fall back to OPML if no feeds from config
+	if len(s.feeds) == 0 {
+		opmlPath := filepath.Join(s.workspace, "feeds.opml")
+		log.Printf("[Monitor] Loading feeds from: %s", opmlPath)
+		if _, err := os.Stat(opmlPath); err == nil {
+			s.feeds = s.parseOPML(opmlPath)
+			log.Printf("[Monitor] Loaded %d feeds from OPML", len(s.feeds))
+		}
+	}
+
+	// Final fallback to defaults
+	if len(s.feeds) == 0 {
+		s.feeds = []Feed{
+			{Name: "Reuters", URL: "https://feeds.reuters.com/reuters/topNews", Category: "world", Tier: 1, Lang: "en", Active: true},
+			{Name: "BBC", URL: "http://feeds.bbci.co.uk/news/world/rss.xml", Category: "world", Tier: 1, Lang: "en", Active: true},
+			{Name: "bdnews24", URL: "https://bdnews24.com/rss", Category: "bangladesh", Tier: 1, Lang: "en", Active: true},
+			{Name: "The Daily Star", URL: "https://www.thedailystar.net/rss.xml", Category: "bangladesh", Tier: 1, Lang: "en", Active: true},
+			{Name: "OpenAI", URL: "https://openai.com/news/rss.xml", Category: "tech", Tier: 1, Lang: "en", Active: true},
+			{Name: "TechCrunch", URL: "https://techcrunch.com/feed/", Category: "tech", Tier: 1, Lang: "en", Active: true},
+			{Name: "Hacker News", URL: "https://hnrss.org/frontpage", Category: "tech", Tier: 1, Lang: "en", Active: true},
+			{Name: "arXiv AI", URL: "https://rss.arxiv.org/rss/cs.AI", Category: "ai", Tier: 1, Lang: "en", Active: true},
+		}
+		log.Printf("[Monitor] Using default feeds")
+	}
+}
+
+func getString(m map[string]interface{}, key, def string) string {
+	if v, ok := m[key].(string); ok {
+		return v
+	}
+	return def
 }
 
 type opmlOutline struct {
