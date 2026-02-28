@@ -116,6 +116,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: artifacts
+          merge-multiple: true
 
       - name: Create checksums
         run: |
@@ -125,11 +126,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            artifacts/son-of-anthon-linux-amd64
-            artifacts/son-of-anthon-linux-arm64
-            artifacts/son-of-anthon-windows-amd64.exe
-            artifacts/checksums.txt
-          generate_release_notes: true
+            artifacts/*
           tag_name: v0.0.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
