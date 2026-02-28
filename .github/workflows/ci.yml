@@ -122,12 +122,27 @@ jobs:
         run: |
           find artifacts -type f -exec sha256sum {} \; > checksums.txt
 
+      - name: Get next version
+        id: version
+        run: |
+          git fetch --tags
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          # Extract version number and increment
+          VER=$(echo $LAST_TAG | sed 's/v//')
+          MAJOR=$(echo $VER | cut -d. -f1)
+          MINOR=$(echo $VER | cut -d. -f2)
+          PATCH=$(echo $VER | cut -d. -f3)
+          PATCH=$((PATCH + 1))
+          NEW_TAG="v${MAJOR}.${MINOR}.${PATCH}"
+          echo "tag=$NEW_TAG" >> $GITHUB_OUTPUT
+          echo "Previous: $LAST_TAG -> New: $NEW_TAG"
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
             artifacts/*
           generate_release_notes: true
-          tag_name: v0.0.1
+          tag_name: ${{ steps.version.outputs.tag }}
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
