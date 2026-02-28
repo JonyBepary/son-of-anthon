@@ -158,8 +158,9 @@ jobs:
       - name: Get next version
         id: version
         run: |
-          git fetch --tags
-          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          git fetch --tags origin
+          LAST_TAG=$(git describe --tags --abbrev=0 origin/main 2>/dev/null || echo "v0.0.0")
+          echo "Last tag found: $LAST_TAG"
           # Extract version number and increment
           VER=$(echo $LAST_TAG | sed 's/v//')
           MAJOR=$(echo $VER | cut -d. -f1)
@@ -175,11 +176,11 @@ jobs:
           echo "Previous: $LAST_TAG -> New: $NEW_TAG"
 
       - name: Delete old release
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         run: |
           TAG="${{ steps.version.outputs.tag }}"
-          # Delete existing release if it exists
           gh release delete "$TAG" --yes || true
-          # Delete existing tag
           git push --delete origin "$TAG" || true
 
       - name: Create Release
