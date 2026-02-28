@@ -76,8 +76,6 @@ nfpms:
       - deb
       - rpm
     contents:
-      - src: son-of-anthon
-        dst: /usr/bin/son-of-anthon
       - src: install/linux/install.sh
         dst: /usr/share/son-of-anthon/install.sh
         type: config|noreplace
