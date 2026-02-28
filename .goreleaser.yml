@@ -1,0 +1,78 @@
+project_name: son-of-anthon
+builds:
+  - id: son-of-anthon-linux-amd64
+    goos: linux
+    goarch: amd64
+    binary: son-of-anthon
+  - id: son-of-anthon-linux-arm64
+    goos: linux
+    goarch: arm64
+    binary: son-of-anthon
+  - id: son-of-anthon-darwin-amd64
+    goos: darwin
+    goarch: amd64
+    binary: son-of-anthon
+  - id: son-of-anthon-darwin-arm64
+    goos: darwin
+    goarch: arm64
+    binary: son-of-anthon
+  - id: son-of-anthon-windows-amd64
+    goos: windows
+    goarch: amd64
+    binary: son-of-anthon
+
+nfpms:
+  - id: linux-amd64
+    package_name: son-of-anthon
+    builds:
+      - son-of-anthon-linux-amd64
+    arch: amd64
+    maintainer: Jony Bepary <jony@example.com>
+    description: Multi-agent AI Assistant
+    license: MIT
+    homepage: https://github.com/JonyBepary/son-of-anthon
+    files:
+      ./install/linux/son-of-anthon.service: /etc/systemd/system/son-of-anthon.service
+    scripts:
+      postinstall: |
+        systemctl daemon-reload
+        systemctl enable son-of-anthon || true
+      preremove: |
+        systemctl stop son-of-anthon || true
+
+  - id: linux-arm64
+    package_name: son-of-anthon
+    builds:
+      - son-of-anthon-linux-arm64
+    arch: arm64
+    maintainer: Jony Bepary <jony@example.com>
+    description: Multi-agent AI Assistant
+    license: MIT
+    homepage: https://github.com/JonyBepary/son-of-anthon
+    files:
+      ./install/linux/son-of-anthon.service: /etc/systemd/system/son-of-anthon.service
+    scripts:
+      postinstall: |
+        systemctl daemon-reload
+        systemctl enable son-of-anthon || true
+      preremove: |
+        systemctl stop son-of-anthon || true
+
+  - id: termux
+    package_name: son-of-anthon-termux
+    builds:
+      - son-of-anthon-linux-arm64
+    arch: aarch64
+    maintainer: Jony Bepary <jony@example.com>
+    description: Multi-agent AI Assistant for Termux
+    license: MIT
+    homepage: https://github.com/JonyBepary/son-of-anthon
+
+archives:
+  - id: binaries
+    builds:
+      - son-of-anthon-*
+    format: tar.gz
+
+checksum:
+  name_template: 'checksums.txt'

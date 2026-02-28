@@ -60,15 +60,11 @@ jobs:
         if: matrix.platform != 'windows-amd64'
         run: |
           mkdir -p installers/${{ matrix.platform }}
-          cp son-of-anthon${{ matrix.ext }} install/${{ matrix.platform }}/
-          if [ "${{ matrix.platform }}" = "linux-amd64" ]; then
-            cp install/linux/install.sh installers/${{ matrix.platform }}/
-          elif [ "${{ matrix.platform }}" = "linux-arm64" ]; then
-            cp install/linux/install.sh installers/${{ matrix.platform }}/
-          elif [ "${{ matrix.platform }}" = "darwin-amd64" ]; then
-            cp install/darwin/install.sh installers/${{ matrix.platform }}/
-          elif [ "${{ matrix.platform }}" = "darwin-arm64" ]; then
-            cp install/darwin/install.sh installers/${{ matrix.platform }}/
+          # Extract OS name from platform (e.g., darwin-amd64 -> darwin)
+          OS_NAME=$(echo "${{ matrix.platform }}" | cut -d'-' -f1)
+          cp son-of-anthon${{ matrix.ext }} installers/${{ matrix.platform }}/
+          if [ -f "install/${OS_NAME}/install.sh" ]; then
+            cp install/${OS_NAME}/install.sh installers/${{ matrix.platform }}/
           fi
           chmod +x installers/${{ matrix.platform }}/*.sh 2>/dev/null || true
 
