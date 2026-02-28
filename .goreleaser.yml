@@ -43,7 +43,8 @@ archives:
   - id: termux
     ids:
       - termux-arm64
-    format: tar
+    formats:
+      - tar
     files:
       - install/termux/install.sh
 
@@ -51,14 +52,16 @@ archives:
     ids:
       - darwin-amd64
       - darwin-arm64
-    format: tar
+    formats:
+      - tar
     files:
       - install/darwin/install.sh
 
   - id: windows
     ids:
       - windows-amd64
-    format: zip
+    formats:
+      - zip
     files:
       - install/windows/install.bat
 
