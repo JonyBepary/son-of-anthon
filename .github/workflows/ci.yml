@@ -127,6 +127,7 @@ jobs:
         with:
           files: |
             artifacts/*
+          generate_release_notes: true
           tag_name: v0.0.1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
