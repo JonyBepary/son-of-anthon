@@ -124,14 +124,16 @@ jobs:
 
       - name: Create checksums
         run: |
-          cd artifacts
-          sha256sum * > checksums.txt
+          find artifacts -type f -exec sha256sum {} \; > checksums.txt
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            artifacts/*
+            artifacts/son-of-anthon-linux-amd64
+            artifacts/son-of-anthon-linux-arm64
+            artifacts/son-of-anthon-windows-amd64.exe
+            artifacts/checksums.txt
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
