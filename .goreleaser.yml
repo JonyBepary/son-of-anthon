@@ -4,47 +4,70 @@ builds:
     goos: linux
     goarch: amd64
     binary: son-of-anthon
+    env:
+      - CGO_ENABLED=0
   - id: son-of-anthon-linux-arm64
     goos: linux
     goarch: arm64
     binary: son-of-anthon
+    env:
+      - CGO_ENABLED=0
+  - id: son-of-anthon-termux-arm64
+    goos: linux
+    goarch: arm64
+    binary: son-of-anthon-termux
+    env:
+      - CGO_ENABLED=0
   - id: son-of-anthon-darwin-amd64
     goos: darwin
     goarch: amd64
     binary: son-of-anthon
+    env:
+      - CGO_ENABLED=0
   - id: son-of-anthon-darwin-arm64
     goos: darwin
     goarch: arm64
     binary: son-of-anthon
+    env:
+      - CGO_ENABLED=0
   - id: son-of-anthon-windows-amd64
     goos: windows
     goarch: amd64
     binary: son-of-anthon
+    env:
+      - CGO_ENABLED=0
 
+# Native Linux packages
 nfpms:
-  - id: linux-amd64
+  # Debian/Ubuntu (systemd)
+  - id: deb-amd64
     package_name: son-of-anthon
     builds:
       - son-of-anthon-linux-amd64
     arch: amd64
+    distro: ubuntu
     maintainer: Jony Bepary <jony@example.com>
     description: Multi-agent AI Assistant
     license: MIT
     homepage: https://github.com/JonyBepary/son-of-anthon
+    section: utils
+    priority: optional
     files:
       ./install/linux/son-of-anthon.service: /etc/systemd/system/son-of-anthon.service
     scripts:
       postinstall: |
-        systemctl daemon-reload
+        systemctl daemon-reload || true
         systemctl enable son-of-anthon || true
       preremove: |
         systemctl stop son-of-anthon || true
 
-  - id: linux-arm64
+  # Debian/Ubuntu ARM64
+  - id: deb-arm64
     package_name: son-of-anthon
     builds:
       - son-of-anthon-linux-arm64
     arch: arm64
+    distro: ubuntu
     maintainer: Jony Bepary <jony@example.com>
     description: Multi-agent AI Assistant
     license: MIT
@@ -53,26 +76,59 @@ nfpms:
       ./install/linux/son-of-anthon.service: /etc/systemd/system/son-of-anthon.service
     scripts:
       postinstall: |
-        systemctl daemon-reload
+        systemctl daemon-reload || true
         systemctl enable son-of-anthon || true
       preremove: |
         systemctl stop son-of-anthon || true
 
-  - id: termux
-    package_name: son-of-anthon-termux
+  # Fedora/RHEL (systemd)
+  - id: rpm-amd64
+    package_name: son-of-anthon
     builds:
-      - son-of-anthon-linux-arm64
-    arch: aarch64
+      - son-of-anthon-linux-amd64
+    arch: x86_64
     maintainer: Jony Bepary <jony@example.com>
-    description: Multi-agent AI Assistant for Termux
+    description: Multi-agent AI Assistant
     license: MIT
     homepage: https://github.com/JonyBepary/son-of-anthon
+    files:
+      ./install/linux/son-of-anthon.service: /etc/systemd/system/son-of-anthon.service
+    scripts:
+      postinstall: |
+        systemctl daemon-reload || true
+        systemctl enable son-of-anthon || true
+      preremove: |
+        systemctl stop son-of-anthon || true
 
+# Archive for Termux/manual install
 archives:
-  - id: binaries
+  - id: termux
     builds:
-      - son-of-anthon-*
+      - son-of-anthon-termux-arm64
     format: tar.gz
+    files:
+      - install/termux/install.sh
 
+  - id: darwin
+    builds:
+      - son-of-anthon-darwin-amd64
+      - son-of-anthon-darwin-arm64
+    format: tar.gz
+    files:
+      - install/darwin/install.sh
+
+  - id: windows
+    builds:
+      - son-of-anthon-windows-amd64
+    format: zip
+    files:
+      - install/windows/install.bat
+
+# Generate checksums
 checksum:
   name_template: 'checksums.txt'
+
+# GitHub release
+github:
+  owner: JonyBepary
+  name: son-of-anthon

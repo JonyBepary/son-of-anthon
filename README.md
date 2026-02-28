@@ -38,46 +38,50 @@ make build-all
 
 ## Installation
 
-### Termux (Android)
+### Option 1: Native Package (Recommended)
+
+| Platform | Package | Command |
+|----------|---------|---------|
+| Ubuntu/Debian | `.deb` | `sudo apt install ./son-of-anthon_*.deb` |
+| Fedora/RHEL | `.rpm` | `sudo dnf install ./son-of-anthon_*.rpm` |
+
+Native packages automatically:
+- Install binary to `/usr/bin`
+- Register systemd service
+- Enable on boot
+
+### Option 2: Termux (Android)
 
 ```bash
-# Copy son-of-anthon-termux to phone Downloads
-# Then in Termux:
-
-cd ~/storage/downloads
-bash son-of-anthon-termux/install.sh
-
-# Or use the installer:
+# Download termux package and extract:
+tar -xzf son-of-anthon-termux-*.tar.gz
+cd son-of-anthon-termux-*
 bash install.sh
 ```
 
-### Linux (Ubuntu/Debian/Fedora/Arch)
+### Option 3: Manual Install
 
+#### Linux (systemd)
 ```bash
-# Download and extract release, then:
+# Extract and run:
+tar -xzf son-of-anthon-linux-*.tar.gz
+cd son-of-anthon-linux-*
 sudo ./install.sh
-
-# Start service:
-sudo systemctl start son-of-anthon
-sudo systemctl enable son-of-anthon  # Enable on boot
 ```
 
-### macOS
-
+#### macOS
 ```bash
-# Download and extract release, then:
+tar -xzf son-of-anthon-darwin-*.tar.gz
+cd son-of-anthon-darwin-*
 chmod +x install.sh
 sudo ./install.sh
-
-# Start service:
-launchctl start com.sonofanthon.gateway
 ```
 
-### Windows
-
-1. Download `son-of-anthon-windows-amd64.exe.zip` from releases
-2. Extract to folder
-3. Right-click `install.bat` → Run as Administrator
+#### Windows
+```bash
+# Extract zip and run as Administrator:
+son-of-anthon-windows-*.zip
+Run install.bat
 
 ---
 
