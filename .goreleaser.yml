@@ -7,31 +7,37 @@ builds:
     goos: [linux]
     goarch: [amd64]
     binary: son-of-anthon
+    main: ./cmd/son-of-anthon
 
   - id: linux-arm64
     goos: [linux]
     goarch: [arm64]
     binary: son-of-anthon
+    main: ./cmd/son-of-anthon
 
   - id: darwin-amd64
     goos: [darwin]
     goarch: [amd64]
     binary: son-of-anthon
+    main: ./cmd/son-of-anthon
 
   - id: darwin-arm64
     goos: [darwin]
     goarch: [arm64]
     binary: son-of-anthon
+    main: ./cmd/son-of-anthon
 
   - id: windows-amd64
     goos: [windows]
     goarch: [amd64]
     binary: son-of-anthon
+    main: ./cmd/son-of-anthon
 
   - id: termux-arm64
     goos: [android]
     goarch: [arm64]
     binary: son-of-anthon
+    main: ./cmd/son-of-anthon
 
 archives:
   - id: termux
