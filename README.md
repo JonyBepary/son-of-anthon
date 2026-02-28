@@ -52,8 +52,35 @@ Native packages automatically:
 
 ### Option 2: Termux (Android)
 
+**Quick install (copy-paste this in Termux):**
+
 ```bash
-# Download termux package and extract:
+# Create installation directory
+mkdir -p ~/son-of-anthon && cd ~/son-of-anthon
+
+# Download latest release (replace VERSION with actual version, e.g., v0.0.1)
+# Or download manually from: https://github.com/JonyBepary/son-of-anthon/releases
+
+# Extract (if you have the archive)
+tar -xzf son-of-anthon-termux-*.tar.gz
+cd son-of-anthon-termux-*
+
+# Run installer
+bash install.sh
+
+# Start service
+sv up son-of-anthon
+
+# View logs
+tail -f ~/.picoclaw/termux-logs/current
+```
+
+**Manual download:**
+1. Download `son-of-anthon-termux-*.tar.gz` from [Releases](https://github.com/JonyBepary/son-of-anthon/releases)
+2. Copy to phone storage
+3. In Termux:
+```bash
+cd ~/storage/downloads
 tar -xzf son-of-anthon-termux-*.tar.gz
 cd son-of-anthon-termux-*
 bash install.sh
