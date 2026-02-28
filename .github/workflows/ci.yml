@@ -159,10 +159,14 @@ jobs:
         id: version
         run: |
           git fetch --tags origin
-          LAST_TAG=$(git describe --tags --abbrev=0 origin/main 2>/dev/null || echo "v0.0.0")
-          echo "Last tag found: $LAST_TAG"
+          # Get all tags, sort by version, take latest
+          LATEST_TAG=$(git tag --list 'v*' | sort -V | tail -1)
+          if [ -z "$LATEST_TAG" ]; then
+            LATEST_TAG="v0.0.0"
+          fi
+          echo "Latest tag: $LATEST_TAG"
           # Extract version number and increment
-          VER=$(echo $LAST_TAG | sed 's/v//')
+          VER=$(echo $LATEST_TAG | sed 's/v//')
           MAJOR=$(echo $VER | cut -d. -f1)
           MINOR=$(echo $VER | cut -d. -f2)
           PATCH=$(echo $VER | cut -d. -f3)
@@ -173,7 +177,7 @@ jobs:
           fi
           NEW_TAG="v${MAJOR}.${MINOR}.${PATCH}"
           echo "tag=$NEW_TAG" >> $GITHUB_OUTPUT
-          echo "Previous: $LAST_TAG -> New: $NEW_TAG"
+          echo "Previous: $LATEST_TAG -> New: $NEW_TAG"
 
       - name: Delete old release
         env:
