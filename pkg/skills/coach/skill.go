@@ -8,8 +8,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/jony/son-of-anthon/pkg/sqlite"
 	"github.com/sipeed/picoclaw/pkg/tools"
-	_ "modernc.org/sqlite"
 )
 
 type CoachConfig struct {
@@ -141,7 +141,7 @@ func (s *CoachSkill) initDB() {
 	os.MkdirAll(memDir, 0755)
 
 	dbPath := filepath.Join(memDir, "momentum.db")
-	db, err := sql.Open("sqlite", dbPath)
+	db, err := sqlite.Open(dbPath)
 	if err != nil {
 		fmt.Printf("[Coach] Error opening SQLite database: %v\n", err)
 		return

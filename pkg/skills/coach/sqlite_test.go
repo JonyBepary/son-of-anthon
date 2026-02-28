@@ -1,17 +1,16 @@
 package coach
 
 import (
-	"database/sql"
 	"path/filepath"
 	"testing"
 
-	_ "github.com/glebarez/sqlite"
+	"github.com/jony/son-of-anthon/pkg/sqlite"
 )
 
 func TestSQLiteConnection(t *testing.T) {
 	dbPath := filepath.Join(t.TempDir(), "test.db")
 
-	db, err := sql.Open("sqlite", dbPath)
+	db, err := sqlite.Open(dbPath)
 	if err != nil {
 		t.Fatalf("Failed to open SQLite database: %v", err)
 	}
@@ -27,7 +26,7 @@ func TestSQLiteConnection(t *testing.T) {
 func TestStreaksTable(t *testing.T) {
 	dbPath := filepath.Join(t.TempDir(), "momentum.db")
 
-	db, err := sql.Open("sqlite", dbPath)
+	db, err := sqlite.Open(dbPath)
 	if err != nil {
 		t.Fatalf("Failed to open SQLite database: %v", err)
 	}
@@ -71,42 +70,10 @@ func TestStreaksTable(t *testing.T) {
 	t.Log("Streaks table operations successful")
 }
 
-func TestGlebarezSQLite(t *testing.T) {
-	dbPath := filepath.Join(t.TempDir(), "glebarez_test.db")
-
-	db, err := sql.Open("sqlite", dbPath)
-	if err != nil {
-		t.Fatalf("Failed to open with glebarez/sqlite: %v", err)
-	}
-	defer db.Close()
-
-	_, err = db.Exec("CREATE TABLE test (id INTEGER PRIMARY KEY, name TEXT)")
-	if err != nil {
-		t.Fatalf("Failed to create table: %v", err)
-	}
-
-	_, err = db.Exec("INSERT INTO test (name) VALUES (?)", "hello")
-	if err != nil {
-		t.Fatalf("Failed to insert: %v", err)
-	}
-
-	var name string
-	err = db.QueryRow("SELECT name FROM test WHERE id = 1").Scan(&name)
-	if err != nil {
-		t.Fatalf("Failed to query: %v", err)
-	}
-
-	if name != "hello" {
-		t.Errorf("Expected 'hello', got '%s'", name)
-	}
-
-	t.Log("glebarez/sqlite driver works correctly")
-}
-
 func TestMultipleInserts(t *testing.T) {
 	dbPath := filepath.Join(t.TempDir(), "multi.db")
 
-	db, err := sql.Open("sqlite", dbPath)
+	db, err := sqlite.Open(dbPath)
 	if err != nil {
 		t.Fatalf("Failed to open SQLite: %v", err)
 	}
@@ -145,7 +112,7 @@ func TestMultipleInserts(t *testing.T) {
 func TestConcurrently(t *testing.T) {
 	dbPath := filepath.Join(t.TempDir(), "concurrent.db")
 
-	db, err := sql.Open("sqlite", dbPath)
+	db, err := sqlite.Open(dbPath)
 	if err != nil {
 		t.Fatalf("Failed to open: %v", err)
 	}

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	_ "modernc.org/sqlite"
+	"github.com/jony/son-of-anthon/pkg/sqlite"
 )
 
 type DB struct {
@@ -13,7 +13,7 @@ type DB struct {
 }
 
 func NewDB(path string) (*DB, error) {
-	db, err := sql.Open("sqlite", path)
+	db, err := sqlite.Open(path)
 	if err != nil {
 		return nil, fmt.Errorf("open sqlite: %w", err)
 	}

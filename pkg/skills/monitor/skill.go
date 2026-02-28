@@ -147,6 +147,7 @@ func newSkillWithDefaults(dbPath string) *MonitorSkill {
 		semaphore:  make(chan struct{}, MaxConcurrentFetch),
 		fetchCount: 0,
 		timeWindows: map[string]time.Duration{
+			"breaking":   TimeWindowBreaking,
 			"world":      TimeWindowBreaking,
 			"bangladesh": TimeWindowBD,
 			"tech":       TimeWindowAI,
@@ -154,6 +155,7 @@ func newSkillWithDefaults(dbPath string) *MonitorSkill {
 			"finance":    TimeWindowAI,
 			"policy":     TimeWindowBD,
 			"crypto":     TimeWindowAI,
+			"research":   TimeWindowResearch,
 			"default":    TimeWindowBD,
 		},
 	}
