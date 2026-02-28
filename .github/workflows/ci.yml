@@ -12,7 +12,7 @@ env:
 jobs:
   build:
     name: Build (${{ matrix.platform }})
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
         include:
@@ -20,14 +20,27 @@ jobs:
             GOOS: linux
             GOARCH: amd64
             ext: ''
+            runner: ubuntu-latest
           - platform: linux-arm64
             GOOS: linux
             GOARCH: arm64
             ext: ''
+            runner: ubuntu-latest
           - platform: windows-amd64
             GOOS: windows
             GOARCH: amd64
             ext: .exe
+            runner: ubuntu-latest
+          - platform: darwin-amd64
+            GOOS: darwin
+            GOARCH: amd64
+            ext: ''
+            runner: macos-latest
+          - platform: darwin-arm64
+            GOOS: darwin
+            GOARCH: arm64
+            ext: ''
+            runner: macos-latest
     steps:
       - uses: actions/checkout@v4
         with:
@@ -42,6 +55,30 @@ jobs:
         run: |
           GOOS=${{ matrix.GOOS }} GOARCH=${{ matrix.GOARCH }} CGO_ENABLED=0 \
           go build -ldflags="-s -w" -o son-of-anthon${{ matrix.ext }} ./cmd/son-of-anthon
+
+      - name: Prepare installer
+        if: matrix.platform != 'windows-amd64'
+        run: |
+          mkdir -p installers/${{ matrix.platform }}
+          cp son-of-anthon${{ matrix.ext }} install/${{ matrix.platform }}/
+          if [ "${{ matrix.platform }}" = "linux-amd64" ]; then
+            cp install/linux/install.sh installers/${{ matrix.platform }}/
+          elif [ "${{ matrix.platform }}" = "linux-arm64" ]; then
+            cp install/linux/install.sh installers/${{ matrix.platform }}/
+          elif [ "${{ matrix.platform }}" = "darwin-amd64" ]; then
+            cp install/darwin/install.sh installers/${{ matrix.platform }}/
+          elif [ "${{ matrix.platform }}" = "darwin-arm64" ]; then
+            cp install/darwin/install.sh installers/${{ matrix.platform }}/
+          fi
+          chmod +x installers/${{ matrix.platform }}/*.sh 2>/dev/null || true
+
+      - name: Prepare Windows installer
+        if: matrix.platform == 'windows-amd64'
+        run: |
+          mkdir -p installers/windows
+          cp son-of-anthon.exe install/windows/
+          cp install/windows/install.bat installers/windows/
+          cp config.example.json installers/windows/
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

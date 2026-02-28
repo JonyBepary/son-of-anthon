@@ -17,78 +17,73 @@ A lightweight, Go-native multi-agent AI assistant orchestrator built on [PicoCla
 
 ## Quick Start
 
-### 1. Clone & Build
+### Download & Run
+
+Download from [Releases](https://github.com/JonyBepary/son-of-anthon/releases) for your platform, or:
 
 ```bash
+# Clone and build
 git clone https://github.com/JonyBepary/son-of-anthon.git
 cd son-of-anthon
 git submodule update --init --recursive
-go build -o son-of-anthon ./cmd/son-of-anthon
-```
 
-### 2. Run Setup
+# Build for your platform
+make build-all
 
-```bash
-./son-of-anthon setup
-```
-
-This will prompt for API keys (NVIDIA, Telegram, Nextcloud).
-
-### 3. Start Gateway
-
-```bash
+# Run setup
 ./son-of-anthon gateway
 ```
 
 ---
 
-## Installation Guides
+## Installation
 
 ### Termux (Android)
 
 ```bash
-# Copy son-of-anthon-termux to phone
-cp son-of-anthon-termux ~/storage/downloads/
+# Copy son-of-anthon-termux to phone Downloads
+# Then in Termux:
 
-# In Termux:
 cd ~/storage/downloads
-bash setup-termux.sh son-of-anthon-termux
+bash son-of-anthon-termux/install.sh
 
-# Start daemon
-sv up son-of-anthon
-
-# Check logs
-tail -f ~/.picoclaw/termux-logs/current
+# Or use the installer:
+bash install.sh
 ```
 
-### Linux (systemd)
+### Linux (Ubuntu/Debian/Fedora/Arch)
 
 ```bash
-# As root:
-sudo ./install/install-systemd.sh
+# Download and extract release, then:
+sudo ./install.sh
 
-# Enable on boot
-sudo systemctl enable son-of-anthon
-
-# Start now
+# Start service:
 sudo systemctl start son-of-anthon
+sudo systemctl enable son-of-anthon  # Enable on boot
+```
 
-# View logs
-journalctl -u son-of-anthon -f
+### macOS
+
+```bash
+# Download and extract release, then:
+chmod +x install.sh
+sudo ./install.sh
+
+# Start service:
+launchctl start com.sonofanthon.gateway
 ```
 
 ### Windows
 
-1. Download `son-of-anthon-windows-amd64.exe` from releases
-2. Run `install/setup-windows.bat` as Administrator
-3. Edit `%APPDATA%\son-of-anthon\config.json` with your API keys
-4. Run `son-of-anthon.exe gateway`
+1. Download `son-of-anthon-windows-amd64.exe.zip` from releases
+2. Extract to folder
+3. Right-click `install.bat` → Run as Administrator
 
 ---
 
 ## Configuration
 
-Copy `config.example.json` to `~/.picoclaw/config.json`:
+After first run, config is created at `~/.picoclaw/config.json`:
 
 ```json
 {
@@ -114,11 +109,11 @@ Copy `config.example.json` to `~/.picoclaw/config.json`:
 
 ## News Sources (Monitor)
 
-Default feeds configured in `config.json`:
+Default feeds:
 - **Bangladesh**: Prothom Alo, The Daily Star, bdnews24
 - **World**: Google News
 - **AI**: OpenAI, GPT, Gemini, Claude
-- **Tech**: Silicon Valley, Apple, Google, Microsoft
+- **Tech**: Apple, Google, Microsoft, NVIDIA
 - **Finance**: Stock, crypto
 - **Policy**: Government, election
 
@@ -126,7 +121,7 @@ Default feeds configured in `config.json`:
 
 ## Requirements
 
-- Go 1.26+
+- Go 1.26+ (for development)
 - Telegram Bot Token (optional)
 - NVIDIA API key (for LLM)
 - Nextcloud (optional)
