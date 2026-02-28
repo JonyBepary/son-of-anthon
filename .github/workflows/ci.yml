@@ -165,7 +165,11 @@ jobs:
           MAJOR=$(echo $VER | cut -d. -f1)
           MINOR=$(echo $VER | cut -d. -f2)
           PATCH=$(echo $VER | cut -d. -f3)
-          PATCH=$((PATCH + 1))
+          if [ -z "$PATCH" ]; then
+            PATCH=1
+          else
+            PATCH=$((PATCH + 1))
+          fi
           NEW_TAG="v${MAJOR}.${MINOR}.${PATCH}"
           echo "tag=$NEW_TAG" >> $GITHUB_OUTPUT
           echo "Previous: $LAST_TAG -> New: $NEW_TAG"

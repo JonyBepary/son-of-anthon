@@ -1,4 +1,5 @@
 project_name: son-of-anthon
+
 builds:
   - id: son-of-anthon-linux-amd64
     goos: linux
