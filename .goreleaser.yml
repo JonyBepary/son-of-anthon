@@ -1,5 +1,36 @@
 project_name: son-of-anthon
 
+builds:
+  - id: linux-amd64
+    goos: linux
+    goarch: amd64
+    binary: son-of-anthon
+
+  - id: linux-arm64
+    goos: linux
+    goarch: arm64
+    binary: son-of-anthon
+
+  - id: darwin-amd64
+    goos: darwin
+    goarch: amd64
+    binary: son-of-anthon
+
+  - id: darwin-arm64
+    goos: darwin
+    goarch: arm64
+    binary: son-of-anthon
+
+  - id: windows-amd64
+    goos: windows
+    goarch: amd64
+    binary: son-of-anthon
+
+  - id: termux-arm64
+    goos: android
+    goarch: arm64
+    binary: son-of-anthon
+
 archives:
   - id: termux
     builds:
@@ -22,6 +53,26 @@ archives:
     format: zip
     files:
       - install/windows/install.bat
+
+nfpms:
+  - id: linux
+    builds:
+      - linux-amd64
+      - linux-arm64
+    package_name: son-of-anthon
+    vendor: Son of Anthon
+    homepage: https://github.com/JonyBepary/son-of-anthon
+    description: AI-powered multi-agent assistant
+    license: MIT
+    formats:
+      - deb
+      - rpm
+    contents:
+      - src: son-of-anthon
+        dst: /usr/bin/son-of-anthon
+      - src: install/linux/install.sh
+        dst: /usr/share/son-of-anthon/install.sh
+        type: config|noreplace
 
 checksum:
   name_template: 'checksums.txt'

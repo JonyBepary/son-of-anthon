@@ -186,5 +186,3 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
-          GOARCH: amd64
-          GOOS: linux
