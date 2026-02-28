@@ -1116,13 +1116,21 @@ func (s *MonitorSkill) loadFeeds() {
 	// Final fallback to defaults (Google News powered)
 	if len(s.feeds) == 0 {
 		s.feeds = []Feed{
-			{Name: "Google News Bangladesh", URL: "https://news.google.com/rss/search?q=Bangladesh+bd&when:7d&hl=en-US&gl=US&ceid=US:en", Category: "bangladesh", Tier: 1, Lang: "en", Active: true},
+			// Bangladesh sources (tier 1 = top priority)
+			{Name: "Prothom Alo", URL: "https://news.google.com/rss/topics/CAAqJggKIiBDQklTRWdnTWFnNEtERzVsZDJGblpXSmtMbTVsZENnQVAB?hl=en-US&gl=US&ceid=US%3Aen", Category: "bangladesh", Tier: 1, Lang: "en", Active: true},
+			{Name: "The Daily Star", URL: "https://news.google.com/rss/search?q=site:thedailystar.net&when:7d&hl=en-US&gl=US&ceid=US:en", Category: "bangladesh", Tier: 1, Lang: "en", Active: true},
+			{Name: "bdnews24", URL: "https://news.google.com/rss/topics/CAAqLQgKIidDQklTRndnTWFoTUtFV1Z1TG5CeWIzUm9iMjFoYkc4dVkyOXRLQUFQAQ?hl=en-US&gl=US&ceid=US:en", Category: "bangladesh", Tier: 1, Lang: "en", Active: true},
+			{Name: "Google News Bangladesh", URL: "https://news.google.com/rss/search?q=Bangladesh+bd&when:7d&hl=en-US&gl=US&ceid=US:en", Category: "bangladesh", Tier: 2, Lang: "en", Active: true},
+			// World
 			{Name: "Google News World", URL: "https://news.google.com/rss/search?q=world+breaking&when:1d&hl=en-US&gl=US&ceid=US:en", Category: "world", Tier: 1, Lang: "en", Active: true},
+			// Tech
 			{Name: "Google News AI", URL: "https://news.google.com/rss/search?q=openai+GPT+ChatGPT+AGI+Gemini+Claude+LLM+AI&when:7d&hl=en-US&gl=US&ceid=US:en", Category: "ai", Tier: 1, Lang: "en", Active: true},
 			{Name: "Google News Tech", URL: "https://news.google.com/rss/search?q=tech+Silicon+Valley+Apple+Google+Microsoft+NVIDIA&when:7d&hl=en-US&gl=US&ceid=US:en", Category: "tech", Tier: 1, Lang: "en", Active: true},
+			// Finance & Crypto
 			{Name: "Google News Finance", URL: "https://news.google.com/rss/search?q=stock+market+economy+bitcoin+crypto+finance&when:7d&hl=en-US&gl=US&ceid=US:en", Category: "finance", Tier: 1, Lang: "en", Active: true},
-			{Name: "Google News Policy", URL: "https://news.google.com/rss/search?q=policy+government+election+parliament&when:7d&hl=en-US&gl=US&ceid=US:en", Category: "policy", Tier: 1, Lang: "en", Active: true},
 			{Name: "Google News Blockchain", URL: "https://news.google.com/rss/search?q=bitcoin+ethereum+crypto+blockchain+web3+NFT&when:7d&hl=en-US&gl=US&ceid=US:en", Category: "crypto", Tier: 1, Lang: "en", Active: true},
+			// Policy
+			{Name: "Google News Policy", URL: "https://news.google.com/rss/search?q=policy+government+election+parliament&when:7d&hl=en-US&gl=US&ceid=US:en", Category: "policy", Tier: 1, Lang: "en", Active: true},
 		}
 		log.Printf("[Monitor] Using default Google News feeds")
 	}

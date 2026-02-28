@@ -42,7 +42,10 @@
       "gl": "US"
     },
     "feeds": [
-      {"name": "Google News Bangladesh", "url": "https://news.google.com/rss/search?q=Bangladesh+bd&when:7d&hl=en-US&gl=US&ceid=US:en", "category": "bangladesh", "tier": 1, "lang": "en", "active": true},
+      {"name": "Prothom Alo", "url": "https://news.google.com/rss/topics/CAAqJggKIiBDQklTRWdnTWFnNEtERzVsZDJGblpXSmtMbTVsZENnQVAB?hl=en-US&gl=US&ceid=US%3Aen", "category": "bangladesh", "tier": 1, "lang": "en", "active": true},
+      {"name": "The Daily Star", "url": "https://news.google.com/rss/search?q=site:thedailystar.net&when:7d&hl=en-US&gl=US&ceid=US:en", "category": "bangladesh", "tier": 1, "lang": "en", "active": true},
+      {"name": "bdnews24", "url": "https://news.google.com/rss/topics/CAAqLQgKIidDQklTRndnTWFoTUtFV1Z1TG5CeWIzUm9iMjFoYkc4dVkyOXRLQUFQAQ?hl=en-US&gl=US&ceid=US:en", "category": "bangladesh", "tier": 1, "lang": "en", "active": true},
+      {"name": "Google News Bangladesh", "url": "https://news.google.com/rss/search?q=Bangladesh+bd&when:7d&hl=en-US&gl=US&ceid=US:en", "category": "bangladesh", "tier": 2, "lang": "en", "active": true},
       {"name": "Google News World", "url": "https://news.google.com/rss/search?q=world+breaking&when:1d&hl=en-US&gl=US&ceid=US:en", "category": "world", "tier": 1, "lang": "en", "active": true},
       {"name": "Google News AI", "url": "https://news.google.com/rss/search?q=openai+GPT+ChatGPT+AGI+Gemini+Claude+LLM+AI&when:7d&hl=en-US&gl=US&ceid=US:en", "category": "ai", "tier": 1, "lang": "en", "active": true},
       {"name": "Google News Tech", "url": "https://news.google.com/rss/search?q=tech+Silicon+Valley+Apple+Google+Microsoft+NVIDIA&when:7d&hl=en-US&gl=US&ceid=US:en", "category": "tech", "tier": 1, "lang": "en", "active": true},
