@@ -84,5 +84,22 @@ nfpms:
         dst: /usr/share/son-of-anthon/install.sh
         type: config|noreplace
 
+  - id: termux
+    ids:
+      - termux-arm64
+    package_name: son-of-anthon
+    vendor: Son of Anthon
+    maintainer: Son of Anthon
+    homepage: https://github.com/JonyBepary/son-of-anthon
+    description: AI-powered multi-agent assistant (Termux)
+    license: MIT
+    formats:
+      - deb
+    arch: arm64
+    contents:
+      - src: install/termux/install.sh
+        dst: /usr/share/son-of-anthon/install.sh
+        type: config|noreplace
+
 checksum:
   name_template: 'checksums.txt'
