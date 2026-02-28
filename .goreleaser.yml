@@ -41,22 +41,22 @@ builds:
 
 archives:
   - id: termux
-    builds:
+    ids:
       - termux-arm64
-    format: tar.gz
+    format: tar
     files:
       - install/termux/install.sh
 
   - id: darwin
-    builds:
+    ids:
       - darwin-amd64
       - darwin-arm64
-    format: tar.gz
+    format: tar
     files:
       - install/darwin/install.sh
 
   - id: windows
-    builds:
+    ids:
       - windows-amd64
     format: zip
     files:
@@ -64,11 +64,12 @@ archives:
 
 nfpms:
   - id: linux
-    builds:
+    ids:
       - linux-amd64
       - linux-arm64
     package_name: son-of-anthon
     vendor: Son of Anthon
+    maintainer: Son of Anthon
     homepage: https://github.com/JonyBepary/son-of-anthon
     description: AI-powered multi-agent assistant
     license: MIT
