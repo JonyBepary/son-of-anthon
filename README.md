@@ -12,7 +12,7 @@ A lightweight, Go-native multi-agent AI assistant orchestrator built on [PicoCla
 - 📋 **ATC** - Task management with Nextcloud sync
 - 🏠 **Architect** - Life admin, deadline tracking  
 - 📚 **Coach** - Learning assistant, habit tracking
-- 📰 **Monitor** - RSS news curation
+- 📰 **Monitor** - RSS news curation (Google News powered)
 - 🔬 **Research** - Academic paper discovery
 
 ## Quick Start
@@ -22,11 +22,7 @@ A lightweight, Go-native multi-agent AI assistant orchestrator built on [PicoCla
 ```bash
 git clone https://github.com/JonyBepary/son-of-anthon.git
 cd son-of-anthon
-
-# Initialize submodule
 git submodule update --init --recursive
-
-# Build
 go build -o son-of-anthon ./cmd/son-of-anthon
 ```
 
@@ -36,10 +32,7 @@ go build -o son-of-anthon ./cmd/son-of-anthon
 ./son-of-anthon setup
 ```
 
-This will:
-- Create `~/.picoclaw/` directory
-- Extract workspace templates
-- Prompt for API keys (NVIDIA, Telegram, Nextcloud, Brave)
+This will prompt for API keys (NVIDIA, Telegram, Nextcloud).
 
 ### 3. Start Gateway
 
@@ -47,33 +40,55 @@ This will:
 ./son-of-anthon gateway
 ```
 
-## Termux Installation (Android)
+---
 
-See [setup-termux.sh](./setup-termux.sh) for full instructions.
+## Installation Guides
+
+### Termux (Android)
 
 ```bash
-# Install dependencies
-pkg install termux-services git golang
+# Copy son-of-anthon-termux to phone
+cp son-of-anthon-termux ~/storage/downloads/
 
-# Clone and build
-git clone https://github.com/JonyBepary/son-of-anthon.git
-cd son-of-anthon
-git submodule update --init --recursive
-GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -o son-of-anthon-termux ./cmd/son-of-anthon
-
-# Run setup
-./son-of-anthon-termux setup
-
-# Setup runit service
-bash setup-termux.sh
+# In Termux:
+cd ~/storage/downloads
+bash setup-termux.sh son-of-anthon-termux
 
 # Start daemon
 sv up son-of-anthon
+
+# Check logs
+tail -f ~/.picoclaw/termux-logs/current
 ```
+
+### Linux (systemd)
+
+```bash
+# As root:
+sudo ./install/install-systemd.sh
+
+# Enable on boot
+sudo systemctl enable son-of-anthon
+
+# Start now
+sudo systemctl start son-of-anthon
+
+# View logs
+journalctl -u son-of-anthon -f
+```
+
+### Windows
+
+1. Download `son-of-anthon-windows-amd64.exe` from releases
+2. Run `install/setup-windows.bat` as Administrator
+3. Edit `%APPDATA%\son-of-anthon\config.json` with your API keys
+4. Run `son-of-anthon.exe gateway`
+
+---
 
 ## Configuration
 
-Copy `config.example.json` to `~/.picoclaw/config.json` and fill in your keys:
+Copy `config.example.json` to `~/.picoclaw/config.json`:
 
 ```json
 {
@@ -97,20 +112,32 @@ Copy `config.example.json` to `~/.picoclaw/config.json` and fill in your keys:
 }
 ```
 
+## News Sources (Monitor)
+
+Default feeds configured in `config.json`:
+- **Bangladesh**: Prothom Alo, The Daily Star, bdnews24
+- **World**: Google News
+- **AI**: OpenAI, GPT, Gemini, Claude
+- **Tech**: Silicon Valley, Apple, Google, Microsoft
+- **Finance**: Stock, crypto
+- **Policy**: Government, election
+
+---
+
 ## Requirements
 
 - Go 1.26+
 - Telegram Bot Token (optional)
 - NVIDIA API key (for LLM)
-- Nextcloud instance (optional, for calendar/tasks)
+- Nextcloud (optional)
+
+---
 
 ## Status
 
-🚧 **UNDER CONSTRUCTION** - Not ready for production use
+🚧 **UNDER CONSTRUCTION** - Not production ready
 
-- API may change
-- Features incomplete
-- Testing in progress
+---
 
 ## License
 

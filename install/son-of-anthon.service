@@ -1,0 +1,22 @@
+[Unit]
+Description=Son of Anthon - Multi-agent AI Assistant
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=%u
+Group=%g
+WorkingDirectory=%h/.picoclaw
+ExecStart=/usr/local/bin/son-of-anthon gateway
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+# Environment
+Environment=HOME=%h
+Environment=PERSONAL_OS_CONFIG=%h/.picoclaw/config.json
+
+[Install]
+WantedBy=multi-user.target
