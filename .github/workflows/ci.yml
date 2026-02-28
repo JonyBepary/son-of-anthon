@@ -145,27 +145,14 @@ jobs:
         with:
           submodules: true
 
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-          merge-multiple: true
-
-      - name: Create checksums
-        run: |
-          find artifacts -type f -exec sha256sum {} \; > checksums.txt
-
       - name: Get next version
         id: version
         run: |
           git fetch --tags origin
-          # Get all tags, sort by version, take latest
           LATEST_TAG=$(git tag --list 'v*' | sort -V | tail -1)
           if [ -z "$LATEST_TAG" ]; then
             LATEST_TAG="v0.0.0"
           fi
-          echo "Latest tag: $LATEST_TAG"
-          # Extract version number and increment
           VER=$(echo $LATEST_TAG | sed 's/v//')
           MAJOR=$(echo $VER | cut -d. -f1)
           MINOR=$(echo $VER | cut -d. -f2)
@@ -187,12 +174,17 @@ jobs:
           gh release delete "$TAG" --yes || true
           git push --delete origin "$TAG" || true
 
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
+      - name: Set up Go
+        uses: actions/setup-go@v5
         with:
-          files: |
-            artifacts/*
-          generate_release_notes: true
-          tag_name: ${{ steps.version.outputs.tag }}
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v5
+        with:
+          version: latest
+          args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          GOARCH: amd64
+          GOOS: linux
