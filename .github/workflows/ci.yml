@@ -111,30 +111,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: true
-          fetch-depth: 0
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: ${{ env.GO_VERSION }}
-
-      - name: Get latest tag
-        id: get_tag
-        run: |
-          git fetch --tags
-          TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-          if [ -z "$TAG" ]; then
-            TAG="v0.0.1"
-          else
-            # Increment patch version
-            TAG="v$(echo $TAG | sed 's/v//' | awk -F. '{print $1"."$2"."$3+1}')"
-          fi
-          echo "tag=$TAG" >> $GITHUB_OUTPUT
-          git tag $TAG
-        shell: bash
-
-      - name: Push tag
-        run: git push origin ${{ steps.get_tag.outputs.tag }}
 
       - name: Download artifacts
         uses: actions/download-artifact@v4
@@ -154,5 +130,6 @@ jobs:
             artifacts/son-of-anthon-windows-amd64.exe
             artifacts/checksums.txt
           generate_release_notes: true
+          tag_name: v0.0.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
