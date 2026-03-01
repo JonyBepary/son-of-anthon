@@ -263,6 +263,17 @@ func setupCmd() {
 
 	defaults["restrict_to_workspace"] = true
 
+	// Add agents.list with chief as default
+	agentsList := []map[string]interface{}{
+		{
+			"id":      "chief",
+			"name":    "Chief",
+			"default": true,
+			"model":   llmModel,
+		},
+	}
+	agents["list"] = agentsList
+
 	if providerKey != "" {
 		pMap := ensureMap(providers, llmProvider)
 		pMap["api_key"] = providerKey
