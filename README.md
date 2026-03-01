@@ -19,15 +19,20 @@ A lightweight, Go-native multi-agent AI assistant orchestrator built on [PicoCla
 
 ### Download & Run
 
-Download from [Releases](https://github.com/JonyBepary/son-of-anthon/releases) for your platform, or:
+Download from [Releases](https://github.com/JonyBepary/son-of-anthon/releases) for your platform:
 
 ```bash
-# Clone and build
+# Linux
+sudo apt install ./son-of-anthon_*.deb    # Debian/Ubuntu
+sudo dnf install ./son-of-anthon_*.rpm    # Fedora/RHEL
+
+# Termux
+apt install ./son-of-anthon_*.deb
+
+# Or clone and build
 git clone https://github.com/JonyBepary/son-of-anthon.git
 cd son-of-anthon
 git submodule update --init --recursive
-
-# Build for your platform
 make build-all
 
 # Run setup
@@ -44,71 +49,29 @@ make build-all
 |----------|---------|---------|
 | Ubuntu/Debian | `.deb` | `sudo apt install ./son-of-anthon_*.deb` |
 | Fedora/RHEL | `.rpm` | `sudo dnf install ./son-of-anthon_*.rpm` |
+| Termux | `.deb` | `apt install ./son-of-anthon_*.deb` |
 
 Native packages automatically:
 - Install binary to `/usr/bin`
-- Register systemd service
+- Register service (systemd/runit)
 - Enable on boot
 
-### Option 2: Termux (Android)
+### Option 2: Manual Install
 
-**Quick install (copy-paste this in Termux):**
-
+#### Linux/macOS/Termux
 ```bash
-# Create installation directory
-mkdir -p ~/son-of-anthon && cd ~/son-of-anthon
-
-# Download latest release (replace VERSION with actual version, e.g., v0.0.1)
-# Or download manually from: https://github.com/JonyBepary/son-of-anthon/releases
-
-# Extract (if you have the archive)
-tar -xzf son-of-anthon-termux-*.tar.gz
-cd son-of-anthon-termux-*
-
-# Run installer
-bash install.sh
-
-# Start service
-sv up son-of-anthon
-
-# View logs
-tail -f ~/.picoclaw/termux-logs/current
-```
-
-**Manual download:**
-1. Download `son-of-anthon-termux-*.tar.gz` from [Releases](https://github.com/JonyBepary/son-of-anthon/releases)
-2. Copy to phone storage
-3. In Termux:
-```bash
-cd ~/storage/downloads
-tar -xzf son-of-anthon-termux-*.tar.gz
-cd son-of-anthon-termux-*
-bash install.sh
-```
-
-### Option 3: Manual Install
-
-#### Linux (systemd)
-```bash
-# Extract and run:
-tar -xzf son-of-anthon-linux-*.tar.gz
-cd son-of-anthon-linux-*
-sudo ./install.sh
-```
-
-#### macOS
-```bash
-tar -xzf son-of-anthon-darwin-*.tar.gz
-cd son-of-anthon-darwin-*
-chmod +x install.sh
-sudo ./install.sh
+# Download from Releases: https://github.com/JonyBepary/son-of-anthon/releases
+tar -xzf son-of-anthon_*.tar
+cd son-of-anthon_*
+./install.sh
 ```
 
 #### Windows
 ```bash
-# Extract zip and run as Administrator:
-son-of-anthon-windows-*.zip
-Run install.bat
+# Download son-of-anthon_*.zip from Releases
+# Extract and run as Administrator:
+install.bat
+```
 
 ---
 
