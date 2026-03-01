@@ -43,15 +43,17 @@ find_binary() {
     dir=$(dirname "$0")
     
     # Check current directory first
-    if [ -f "$dir/son-of-anthon-termux" ]; then
+    if [ -f "$dir/son-of-anthon" ]; then
+        echo "$dir/son-of-anthon"
+    elif [ -f "$dir/son-of-anthon-termux" ]; then
         echo "$dir/son-of-anthon-termux"
-    elif [ -f "$dir/son-of-anthon-linux-arm64" ]; then
-        echo "$dir/son-of-anthon-linux-arm64"
-    elif [ -f "$PWD/son-of-anthon-termux" ]; then
-        echo "$PWD/son-of-anthon-termux"
+    elif [ -f "$dir/son-of-anthon-android-arm64" ]; then
+        echo "$dir/son-of-anthon-android-arm64"
+    elif [ -f "$PWD/son-of-anthon" ]; then
+        echo "$PWD/son-of-anthon"
     else
         log_error "No Termux binary found!"
-        log_info "Expected: son-of-anthon-termux in current directory"
+        log_info "Expected: son-of-anthon in current directory"
         exit 1
     fi
 }
