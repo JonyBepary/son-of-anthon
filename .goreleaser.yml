@@ -95,7 +95,6 @@ nfpms:
     license: MIT
     formats:
       - deb
-    arch: arm64
     contents:
       - src: install/termux/install.sh
         dst: /usr/share/son-of-anthon/install.sh
