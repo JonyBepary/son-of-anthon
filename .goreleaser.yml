@@ -39,17 +39,10 @@ builds:
     binary: son-of-anthon
     main: ./cmd/son-of-anthon
 
-  - id: termux-aarch64
-    goos: [android]
-    goarch: [aarch64]
-    binary: son-of-anthon
-    main: ./cmd/son-of-anthon
-
 archives:
   - id: termux
     ids:
       - termux-arm64
-      - termux-aarch64
     formats:
       - tar
     files:
