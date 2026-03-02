@@ -373,6 +373,9 @@ func enableAutostartForPlatform(platform string) {
 
 		serviceDir := filepath.Join(home, ".config", "runit", "son-of-anthon")
 		os.MkdirAll(serviceDir, 0755)
+
+		// Create /etc/service if it doesn't exist
+		os.MkdirAll("/etc/service", 0755)
 		os.Symlink(serviceDir, "/etc/service/son-of-anthon")
 
 		if !exists(filepath.Join(home, ".bashrc")) || !containsFile(".bashrc", "son-of-anthon") {
