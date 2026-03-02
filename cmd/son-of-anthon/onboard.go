@@ -69,33 +69,41 @@ func detectPlatform() string {
 	if isTermux() {
 		return "termux"
 	}
-	if isLinux() {
+	if isProotDebian() {
+		return "proot"
+	}
+	if runtime.GOOS == "linux" {
 		return "linux"
 	}
-	if isDarwin() {
+	if runtime.GOOS == "darwin" {
 		return "darwin"
 	}
-	if isWindows() {
+	if runtime.GOOS == "windows" {
 		return "windows"
 	}
 	return "unknown"
 }
 
 func isTermux() bool {
-	_, err := os.Stat("/data/data/com.termux")
-	return os.IsNotExist(err) == false
+	if _, err := os.Stat("/data/data/com.termux"); err == nil {
+		return true
+	}
+	if os.Getenv("TERMUX_VERSION") != "" {
+		return true
+	}
+	if exists("/data/data/com.termux/files/usr/bin/termux-fix-shebang") {
+		return true
+	}
+	return false
 }
 
-func isLinux() bool {
-	return runtime.GOOS == "linux" && !isTermux()
-}
-
-func isDarwin() bool {
-	return runtime.GOOS == "darwin"
-}
-
-func isWindows() bool {
-	return runtime.GOOS == "windows"
+func isProotDebian() bool {
+	if exists("/usr/bin/apt") {
+		if data, err := os.ReadFile("/etc/os-release"); err == nil {
+			return strings.Contains(string(data), "PRETTY_NAME=\"Debian\"")
+		}
+	}
+	return false
 }
 
 func contains(slice []string, item string) bool {
@@ -114,6 +122,9 @@ func installDependencies(platform string) {
 	case "termux":
 		runCmd("pkg", "update", "-y")
 		runCmd("pkg", "install", "-y", "coreutils", "git", "curl", "wget", "termux-services", "sox", "ffmpeg")
+	case "proot":
+		fmt.Println("Make sure you have runit installed in proot-debian:")
+		fmt.Println("  sudo apt install -y runit")
 	case "linux":
 		if exists("/usr/bin/apt") {
 			runCmd("sudo", "apt", "update")
@@ -186,6 +197,8 @@ func installServiceForPlatform(platform string) {
 	switch platform {
 	case "termux":
 		installTermuxService()
+	case "proot":
+		installProotService()
 	case "linux":
 		installLinuxService()
 	case "darwin":
@@ -195,26 +208,56 @@ func installServiceForPlatform(platform string) {
 	}
 }
 
-func installTermuxService() {
+func installProotService() {
 	home := os.Getenv("HOME")
-	serviceDir := filepath.Join(home, ".picoclaw", "service")
+	serviceDir := filepath.Join(home, ".config", "runit", "son-of-anthon")
 	os.MkdirAll(serviceDir, 0755)
+	os.MkdirAll(filepath.Join(serviceDir, "log"), 0755)
 
 	runScript := filepath.Join(serviceDir, "run")
-	content := `#!/data/data/com.termux/files/usr/bin/sh
+	content := `#!/bin/sh
 exec 2>&1
-export PATH="/data/data/com.termux/files/usr/bin:$PATH"
+export PATH="/usr/local/bin:/usr/bin:/bin"
+export HOME="` + home + `"
+exec ` + home + `/son-of-anthon/son-of-anthon gateway
+`
+	os.WriteFile(runScript, []byte(content), 0755)
+
+	logDir := filepath.Join(home, ".picoclaw", "runit-logs")
+	os.MkdirAll(logDir, 0755)
+
+	logScript := filepath.Join(serviceDir, "log", "run")
+	os.WriteFile(logScript, []byte("#!/bin/sh\nexec svlogd -tt "+logDir+"\n"), 0755)
+
+	fmt.Println("Proot service installed at:", serviceDir)
+	fmt.Println("Use: ln -s ~/.config/runit/son-of-anthon /etc/service/ && sv up son-of-anthon")
+}
+
+func installTermuxService() {
+	prefix := os.Getenv("PREFIX")
+	if prefix == "" {
+		prefix = "/data/data/com.termux/files/usr"
+	}
+	home := os.Getenv("HOME")
+
+	serviceDir := filepath.Join(prefix, "var", "service", "son-of-anthon")
+	os.MkdirAll(serviceDir, 0755)
+	os.MkdirAll(filepath.Join(serviceDir, "log"), 0755)
+
+	runScript := filepath.Join(serviceDir, "run")
+	content := fmt.Sprintf(`#!/data/data/com.termux/files/usr/bin/sh
+exec 2>&1
+export PATH="%s/bin:$PATH"
 export GODEBUG=netdns=go
 export HOME="/data/data/com.termux/files/home"
-exec /data/data/com.termux/files/usr/bin/son-of-anthon gateway
-`
+exec %s/bin/son-of-anthon gateway
+`, prefix, prefix)
 	os.WriteFile(runScript, []byte(content), 0755)
 
 	logDir := filepath.Join(home, ".picoclaw", "termux-logs")
 	os.MkdirAll(logDir, 0755)
 
 	logScript := filepath.Join(serviceDir, "log", "run")
-	os.MkdirAll(filepath.Join(serviceDir, "log"), 0755)
 	os.WriteFile(logScript, []byte("#!/data/data/com.termux/files/usr/bin/sh\nexec svlogd -tt "+logDir+"\n"), 0755)
 
 	fmt.Println("Termux service installed at:", serviceDir)
@@ -312,6 +355,20 @@ func enableAutostartForPlatform(platform string) {
 
 		fmt.Println("Termux autostart enabled (boot + bashrc)")
 
+	case "proot":
+		home := os.Getenv("HOME")
+
+		serviceDir := filepath.Join(home, ".config", "runit", "son-of-anthon")
+		os.MkdirAll(serviceDir, 0755)
+		os.Symlink(serviceDir, "/etc/service/son-of-anthon")
+
+		if !exists(filepath.Join(home, ".bashrc")) || !containsFile(".bashrc", "son-of-anthon") {
+			f, _ := os.OpenFile(filepath.Join(home, ".bashrc"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+			f.WriteString("\n# Auto-start son-of-anthon\nsv up son-of-anthon 2>/dev/null || true\n")
+			f.Close()
+		}
+		fmt.Println("Proot autostart enabled (runit + bashrc)")
+
 	case "linux", "darwin":
 		fmt.Println("Autostart already enabled via systemd/launchd service")
 
@@ -325,6 +382,8 @@ func startServiceForPlatform(platform string) {
 
 	switch platform {
 	case "termux":
+		runCmd("sv", "up", "son-of-anthon")
+	case "proot":
 		runCmd("sv", "up", "son-of-anthon")
 	case "linux":
 		runCmd("sudo", "systemctl", "start", "son-of-anthon")
@@ -356,7 +415,7 @@ func showStatusForPlatform(platform string) {
 
 	fmt.Printf("  Service: ")
 	switch platform {
-	case "termux":
+	case "termux", "proot":
 		runCmd("sv", "status", "son-of-anthon")
 	case "linux":
 		runCmd("sudo", "systemctl", "status", "son-of-anthon")
