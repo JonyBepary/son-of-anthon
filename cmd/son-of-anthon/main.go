@@ -22,6 +22,7 @@ import (
 	"github.com/sipeed/picoclaw/pkg/health"
 	"github.com/sipeed/picoclaw/pkg/heartbeat"
 	"github.com/sipeed/picoclaw/pkg/logger"
+	"github.com/sipeed/picoclaw/pkg/media"
 	"github.com/sipeed/picoclaw/pkg/providers"
 	"github.com/sipeed/picoclaw/pkg/state"
 	"github.com/sipeed/picoclaw/pkg/tools"
@@ -187,7 +188,7 @@ func agentCmd() {
 		os.Exit(1)
 	}
 
-	provider, err := providers.CreateProvider(cfg)
+	provider, _, err := providers.CreateProvider(cfg)
 	if err != nil {
 		fmt.Printf("Error creating provider: %v\n", err)
 		os.Exit(1)
@@ -384,7 +385,11 @@ func interactiveMode(provider providers.LLMProvider, model string, toolsRegistry
 func setupCronTool(agentLoop *agent.AgentLoop, msgBus *bus.MessageBus, workspace string, restrict bool, execTimeout time.Duration, config *config.Config) *cron.CronService {
 	cronStorePath := filepath.Join(workspace, "cron", "jobs.json")
 	cronService := cron.NewCronService(cronStorePath, nil)
-	cronTool := tools.NewCronTool(cronService, agentLoop, msgBus, workspace, restrict, execTimeout, config)
+	cronTool, err := tools.NewCronTool(cronService, agentLoop, msgBus, workspace, restrict, execTimeout, config)
+	if err != nil {
+		log.Printf("Error creating cron tool: %v", err)
+		return cronService
+	}
 	agentLoop.RegisterTool(cronTool)
 	cronService.SetOnJob(func(job *cron.CronJob) (string, error) {
 		result := cronTool.ExecuteJob(context.Background(), job)
@@ -409,7 +414,7 @@ func gatewayCmd() {
 		os.Exit(1)
 	}
 
-	provider, err := providers.CreateProvider(cfg)
+	provider, _, err := providers.CreateProvider(cfg)
 	if err != nil {
 		fmt.Printf("Error creating provider: %v\n", err)
 		os.Exit(1)
@@ -526,7 +531,8 @@ func gatewayCmd() {
 		return tools.SilentResult(response)
 	})
 
-	channelManager, err := channels.NewManager(cfg, msgBus)
+	mediaStore := media.NewFileMediaStore()
+	channelManager, err := channels.NewManager(cfg, msgBus, mediaStore)
 	if err != nil {
 		fmt.Printf("Error creating channel manager: %v\n", err)
 		os.Exit(1)
@@ -540,11 +546,7 @@ func gatewayCmd() {
 	}
 
 	if transcriber != nil {
-		if tc, ok := channelManager.GetChannel("telegram"); ok {
-			if telegramChan, ok2 := tc.(*channels.TelegramChannel); ok2 {
-				telegramChan.SetTranscriber(transcriber)
-			}
-		}
+		logger.InfoC("voice", "Groq transcription enabled")
 	}
 
 	enabledChannels := channelManager.GetEnabledChannels()

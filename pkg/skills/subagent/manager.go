@@ -183,7 +183,7 @@ func (sm *SubagentManager) runTask(ctx context.Context, task *SubagentTask) {
 	if sm.bus != nil {
 		announceContent := fmt.Sprintf("Task '%s' (%s) completed.\n\nResult:\n%s",
 			task.Label, task.AgentType, task.Result)
-		sm.bus.PublishInbound(bus.InboundMessage{
+		sm.bus.PublishInbound(context.Background(), bus.InboundMessage{
 			Channel:  "system",
 			SenderID: fmt.Sprintf("subagent:%s", task.ID),
 			ChatID:   fmt.Sprintf("%s:%s", task.OriginChannel, task.OriginChatID),

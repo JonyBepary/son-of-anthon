@@ -9,8 +9,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
-
-	"github.com/sipeed/picoclaw/pkg/config"
 )
 
 const onboardLogo = "🚀"
