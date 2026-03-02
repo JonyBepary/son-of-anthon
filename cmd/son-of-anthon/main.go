@@ -54,6 +54,8 @@ func main() {
 		gatewayCmd()
 	case "setup":
 		setupCmd()
+	case "onboard":
+		onboardCmd()
 	case "version", "--version", "-v":
 		fmt.Printf("%s son-of-anthon v1.0.0\n", logo)
 	default:
@@ -68,10 +70,14 @@ func printHelp() {
 	fmt.Println("Usage: son-of-anthon <command>")
 	fmt.Println()
 	fmt.Println("Commands:")
+	fmt.Println("  onboard   Auto-install and configure for your platform")
 	fmt.Println("  agent     Interact with the main agent")
 	fmt.Println("  gateway   Start the background daemon with Telegram/Cron/Heartbeat")
 	fmt.Println("  setup     Run interactive UI to configure API keys and connections")
 	fmt.Println("  version   Show version")
+	fmt.Println()
+	fmt.Println("Quick Start:")
+	fmt.Println("  son-of-anthon onboard --full    # Install everything at once")
 }
 
 func loadConfig() (*config.Config, error) {
