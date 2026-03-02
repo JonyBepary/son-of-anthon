@@ -379,19 +379,16 @@ func enableAutostartForPlatform(platform string) {
 	case "proot":
 		home := os.Getenv("HOME")
 
-		serviceDir := filepath.Join(home, ".config", "runit", "son-of-anthon")
-		os.MkdirAll(serviceDir, 0755)
-
-		// Create /etc/service if it doesn't exist
-		os.MkdirAll("/etc/service", 0755)
-		os.Symlink(serviceDir, "/etc/service/son-of-anthon")
-
+		// For proot, just add to bashrc to run directly (not via sv)
 		if !exists(filepath.Join(home, ".bashrc")) || !containsFile(".bashrc", "son-of-anthon") {
 			f, _ := os.OpenFile(filepath.Join(home, ".bashrc"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-			f.WriteString("\n# Auto-start son-of-anthon\nsv up son-of-anthon 2>/dev/null || true\n")
+			f.WriteString("\n# Auto-start son-of-anthon\n")
+			f.WriteString("if [ -f ~/son-of-anthon/son-of-anthon ]; then\n")
+			f.WriteString("  ~/son-of-anthon/son-of-anthon gateway &\n")
+			f.WriteString("fi\n")
 			f.Close()
 		}
-		fmt.Println("Proot autostart enabled (runit + bashrc)")
+		fmt.Println("Proot autostart enabled (bashrc - direct run)")
 
 	case "linux", "darwin":
 		fmt.Println("Autostart already enabled via systemd/launchd service")
