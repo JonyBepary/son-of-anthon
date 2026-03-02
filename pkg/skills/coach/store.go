@@ -172,13 +172,16 @@ func (s *CoachStore) updatePace(courseID string) error {
 func (s *CoachStore) GetCourse(id string) (*Course, error) {
 	c := &Course{}
 	var targetDate *int64
+	var createdAt, updatedAt int64
 	err := s.db.QueryRow(`
 		SELECT id, name, type, source, total_units, completed, pace_7day, status, target_date, created_at, updated_at
 		FROM courses WHERE id = ?
-	`, id).Scan(&c.ID, &c.Name, &c.Type, &c.Source, &c.TotalUnits, &c.Completed, &c.Pace7Day, &c.Status, &targetDate, &c.CreatedAt, &c.UpdatedAt)
+	`, id).Scan(&c.ID, &c.Name, &c.Type, &c.Source, &c.TotalUnits, &c.Completed, &c.Pace7Day, &c.Status, &targetDate, &createdAt, &updatedAt)
 	if err != nil {
 		return nil, err
 	}
+	c.CreatedAt = time.Unix(createdAt, 0)
+	c.UpdatedAt = time.Unix(updatedAt, 0)
 	if targetDate != nil {
 		t := time.Unix(*targetDate, 0)
 		c.TargetDate = &t
@@ -200,9 +203,12 @@ func (s *CoachStore) GetActiveCourses() ([]*Course, error) {
 	for rows.Next() {
 		c := &Course{}
 		var targetDate *int64
-		if err := rows.Scan(&c.ID, &c.Name, &c.Type, &c.Source, &c.TotalUnits, &c.Completed, &c.Pace7Day, &c.Status, &targetDate, &c.CreatedAt, &c.UpdatedAt); err != nil {
+		var createdAt, updatedAt int64
+		if err := rows.Scan(&c.ID, &c.Name, &c.Type, &c.Source, &c.TotalUnits, &c.Completed, &c.Pace7Day, &c.Status, &targetDate, &createdAt, &updatedAt); err != nil {
 			return nil, err
 		}
+		c.CreatedAt = time.Unix(createdAt, 0)
+		c.UpdatedAt = time.Unix(updatedAt, 0)
 		if targetDate != nil {
 			t := time.Unix(*targetDate, 0)
 			c.TargetDate = &t
