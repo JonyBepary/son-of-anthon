@@ -241,9 +241,17 @@ exec %s gateway
 	logScript := filepath.Join(serviceDir, "log", "run")
 	os.WriteFile(logScript, []byte("#!/bin/sh\nexec svlogd -tt "+logDir+"\n"), 0755)
 
+	// Try to create symlink, but don't fail if it doesn't work
+	os.MkdirAll("/etc/service", 0755)
+	os.MkdirAll("/run/service", 0755)
+	os.Symlink(serviceDir, "/etc/service/son-of-anthon")
+	os.Symlink(serviceDir, "/run/service/son-of-anthon")
+
 	fmt.Println("Proot service installed at:", serviceDir)
 	fmt.Println("Binary path:", binaryPath)
-	fmt.Println("Use: ln -s ~/.config/runit/son-of-anthon /etc/service/ && sv up son-of-anthon")
+	fmt.Println("")
+	fmt.Println("To start service manually (if sv doesn't work):")
+	fmt.Println("  ~/.config/runit/son-of-anthon/run &")
 }
 
 func installTermuxService() {
@@ -396,11 +404,24 @@ func enableAutostartForPlatform(platform string) {
 func startServiceForPlatform(platform string) {
 	fmt.Printf("[%s] Starting service...\n", platform)
 
+	home := os.Getenv("HOME")
+	cwd, _ := os.Getwd()
+
 	switch platform {
 	case "termux":
 		runCmd("sv", "up", "son-of-anthon")
 	case "proot":
-		runCmd("sv", "up", "son-of-anthon")
+		// Try sv first
+		err := runCmdErr("sv", "up", "son-of-anthon")
+		if err != nil {
+			// Fallback: run directly in background
+			binaryPath := filepath.Join(cwd, "son-of-anthon")
+			if !exists(binaryPath) {
+				binaryPath = filepath.Join(home, "son-of-anthon", "son-of-anthon")
+			}
+			fmt.Println("sv not available or failed. Starting directly in background...")
+			runCmd(binaryPath, "gateway", "&")
+		}
 	case "linux":
 		runCmd("sudo", "systemctl", "start", "son-of-anthon")
 	case "darwin":
@@ -482,6 +503,13 @@ func runCmd(name string, args ...string) {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Run()
+}
+
+func runCmdErr(name string, args ...string) error {
+	cmd := exec.Command(name, args...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
 }
 
 func exists(path string) bool {
