@@ -47,6 +47,7 @@ archives:
       - tar
     files:
       - install/termux/install.sh
+      - install/termux/onboard.sh
 
   - id: darwin
     ids:
