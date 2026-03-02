@@ -66,11 +66,11 @@ func onboardCmd() {
 }
 
 func detectPlatform() string {
-	if isTermux() {
-		return "termux"
-	}
 	if isProotDebian() {
 		return "proot"
+	}
+	if isTermux() {
+		return "termux"
 	}
 	if runtime.GOOS == "linux" {
 		return "linux"
@@ -85,14 +85,17 @@ func detectPlatform() string {
 }
 
 func isTermux() bool {
-	if _, err := os.Stat("/data/data/com.termux"); err == nil {
+	if _, err := os.Stat("/data/data/com.termux/files/usr/bin/termux-changeip"); err == nil {
 		return true
 	}
-	if os.Getenv("TERMUX_VERSION") != "" {
+	if os.Getenv("TERMUX_APP__PACKAGE_NAME") != "" {
 		return true
 	}
-	if exists("/data/data/com.termux/files/usr/bin/termux-fix-shebang") {
-		return true
+	prefix := os.Getenv("PREFIX")
+	if prefix != "" && prefix != "/usr" && prefix != "/usr/local" {
+		if _, err := os.Stat(filepath.Join(prefix, "bin/termux-info")); err == nil {
+			return true
+		}
 	}
 	return false
 }
@@ -100,7 +103,10 @@ func isTermux() bool {
 func isProotDebian() bool {
 	if exists("/usr/bin/apt") {
 		if data, err := os.ReadFile("/etc/os-release"); err == nil {
-			return strings.Contains(string(data), "PRETTY_NAME=\"Debian\"")
+			content := string(data)
+			if strings.Contains(content, "Debian") || strings.Contains(content, "Ubuntu") {
+				return true
+			}
 		}
 	}
 	return false
@@ -210,17 +216,23 @@ func installServiceForPlatform(platform string) {
 
 func installProotService() {
 	home := os.Getenv("HOME")
+	cwd, _ := os.Getwd()
+	binaryPath := filepath.Join(cwd, "son-of-anthon")
+	if !exists(binaryPath) {
+		binaryPath = filepath.Join(home, "son-of-anthon", "son-of-anthon")
+	}
+
 	serviceDir := filepath.Join(home, ".config", "runit", "son-of-anthon")
 	os.MkdirAll(serviceDir, 0755)
 	os.MkdirAll(filepath.Join(serviceDir, "log"), 0755)
 
 	runScript := filepath.Join(serviceDir, "run")
-	content := `#!/bin/sh
+	content := fmt.Sprintf(`#!/bin/sh
 exec 2>&1
 export PATH="/usr/local/bin:/usr/bin:/bin"
-export HOME="` + home + `"
-exec ` + home + `/son-of-anthon/son-of-anthon gateway
-`
+export HOME="%s"
+exec %s gateway
+`, home, binaryPath)
 	os.WriteFile(runScript, []byte(content), 0755)
 
 	logDir := filepath.Join(home, ".picoclaw", "runit-logs")
@@ -230,6 +242,7 @@ exec ` + home + `/son-of-anthon/son-of-anthon gateway
 	os.WriteFile(logScript, []byte("#!/bin/sh\nexec svlogd -tt "+logDir+"\n"), 0755)
 
 	fmt.Println("Proot service installed at:", serviceDir)
+	fmt.Println("Binary path:", binaryPath)
 	fmt.Println("Use: ln -s ~/.config/runit/son-of-anthon /etc/service/ && sv up son-of-anthon")
 }
 
@@ -398,9 +411,10 @@ func showStatusForPlatform(platform string) {
 	fmt.Printf("[%s] Status:\n", platform)
 
 	home := os.Getenv("HOME")
+	cwd, _ := os.Getwd()
 
 	fmt.Printf("  Binary: ")
-	if exists(filepath.Join(home, "son-of-anthon", "son-of-anthon")) || exists(filepath.Join(home, ".local", "bin", "son-of-anthon")) || exists("/usr/local/bin/son-of-anthon") {
+	if exists(filepath.Join(cwd, "son-of-anthon")) || exists(filepath.Join(home, "son-of-anthon", "son-of-anthon")) || exists(filepath.Join(home, ".local", "bin", "son-of-anthon")) || exists("/usr/local/bin/son-of-anthon") {
 		fmt.Println("✓ Installed")
 	} else {
 		fmt.Println("✗ Not found")
