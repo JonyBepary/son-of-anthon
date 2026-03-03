@@ -139,7 +139,7 @@ The config is stored at `~/.picoclaw/config.json` (shares config with PicoClaw f
 
 ## Coach Learning Commands
 
-Track courses, books, and videos with pace tracking:
+Track courses, books, and videos with pace tracking and Kanban visualization:
 
 ```bash
 # Add a course
@@ -159,7 +159,26 @@ coach weekly
 
 # ETA estimate
 coach estimate_finish --course_name "Deep Learning"
+
+# Sync to Nextcloud Deck (Kanban board)
+coach sync_deck
 ```
+
+### Nextcloud Deck Integration
+
+Coach syncs your learning progress to a visual Kanban board with 3 automatic stacks:
+
+- **Want To Learn** (Blue) - Courses with 0% progress
+- **In Progress** (Orange) - Courses with 1-99% progress  
+- **Completed** (Green) - Courses at 100%
+
+Each card shows:
+- Progress bars (X/Y units, percentage)
+- Weekly progress charts (text-based bars)
+- Monthly summary and velocity stats
+- Auto-generated labels (course type, topics)
+
+Cards automatically move between stacks as you make progress. See [docs/DECK_KANBAN_UPDATE.md](docs/DECK_KANBAN_UPDATE.md) for details.
 
 ---
 
