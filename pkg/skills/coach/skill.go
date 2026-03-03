@@ -51,6 +51,9 @@ Commands:
 - weekly: Show this week's learning stats
 - log_progress: Mark chapters/videos as completed
 - estimate_finish: Calculate ETA based on current pace
+- sync_deck: Sync courses to Nextcloud Deck
+- sync_tasks: Sync units to Nextcloud Tasks (CalDAV)
+- sync_calendar: Sync study sessions to Nextcloud Calendar
 
 Examples:
 - "add_course Deep Learning book chapters 1-15"
@@ -58,8 +61,8 @@ Examples:
 - "finished chapter 5"
 - "how far in deep learning"
 - "show weekly progress"
-
-Data stored locally in SQLite for efficiency. Nextcloud sync optional.`
+- "sync to nextcloud deck"
+`
 }
 
 func (s *CoachSkill) Parameters() map[string]interface{} {
@@ -69,7 +72,7 @@ func (s *CoachSkill) Parameters() map[string]interface{} {
 			"command": map[string]interface{}{
 				"type":        "string",
 				"description": "Command to execute",
-				"enum":        []string{"add_course", "my_courses", "progress", "weekly", "log_progress", "estimate_finish", "check_habits", "generate_practice", "update_deck", "nudge_telegram"},
+				"enum":        []string{"add_course", "my_courses", "progress", "weekly", "log_progress", "estimate_finish", "sync_deck", "sync_tasks", "sync_calendar"},
 			},
 			"course_name": map[string]interface{}{
 				"type":        "string",
@@ -176,14 +179,12 @@ func (s *CoachSkill) Execute(ctx context.Context, args map[string]interface{}) *
 		return s.executeLogProgress(ctx, args)
 	case "estimate_finish":
 		return s.executeEstimateFinish(ctx, args)
-	case "check_habits":
-		return s.executeCheckHabits(ctx, args)
-	case "generate_practice":
-		return s.executeGeneratePractice(ctx, args)
-	case "update_deck":
-		return s.executeUpdateDeck(ctx, args)
-	case "nudge_telegram":
-		return s.executeNudgeTelegram(ctx, args)
+	case "sync_deck":
+		return s.executeSyncDeck(ctx, args)
+	case "sync_tasks":
+		return s.executeSyncTasks(ctx, args)
+	case "sync_calendar":
+		return s.executeSyncCalendar(ctx, args)
 	default:
 		return tools.ErrorResult(fmt.Sprintf("Unknown command: %s", command))
 	}
