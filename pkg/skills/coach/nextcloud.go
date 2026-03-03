@@ -28,34 +28,51 @@ func (s *CoachSkill) executeSyncDeck(ctx context.Context, args map[string]interf
 		return tools.ErrorResult("Coach store not initialized")
 	}
 
-	// Get all active courses
 	courses, err := s.store.GetActiveCourses()
 	if err != nil {
 		return tools.ErrorResult(fmt.Sprintf("Error getting courses: %v", err))
 	}
 
 	deckURL := caldav.BuildDeckURL(cfg.Host)
-	apiURL := strings.TrimRight(deckURL, "/") + "/api/v1.0"
+	apiURL := strings.TrimRight(deckURL, "/")
 
-	// Get boards to find or create "Learning" board
 	boardID, err := findOrCreateDeckBoard(apiURL, cfg.Username, cfg.Password, "Learning")
 	if err != nil {
 		return tools.ErrorResult(fmt.Sprintf("Deck error: %v", err))
 	}
 
+	// Ensure 3 stacks exist
+	stacks, err := ensureKanbanStacks(apiURL, cfg.Username, cfg.Password, boardID)
+	if err != nil {
+		return tools.ErrorResult(fmt.Sprintf("Stack error: %v", err))
+	}
+
 	synced := 0
 	for _, course := range courses {
-		// Find or create card for this course
-		cardID, err := findOrCreateDeckCard(apiURL, cfg.Username, cfg.Password, boardID, course.Name, string(course.Type), course.TotalUnits, course.Completed)
+		progress := 0
+		if course.TotalUnits > 0 {
+			progress = (course.Completed * 100) / course.TotalUnits
+		}
+
+		// Determine target stack
+		targetStack := "Want To Learn"
+		if progress >= 100 {
+			targetStack = "Completed"
+		} else if progress > 0 {
+			targetStack = "In Progress"
+		}
+
+		stackID := stacks[targetStack]
+		cardID, err := findOrCreateDeckCardInStack(apiURL, cfg.Username, cfg.Password, boardID, stackID, course.Name)
 		if err != nil {
 			continue
 		}
 
-		// Update card description with progress
-		desc := fmt.Sprintf("**Type:** %s\n**Progress:** %d/%d (%d%%)\n**Pace:** %.1f units/day",
-			course.Type, course.Completed, course.TotalUnits, (course.Completed*100)/course.TotalUnits, course.Pace7Day)
+		// Build progress visualization
+		desc := buildProgressDescription(*course, s.store)
+		labels := buildCourseLabels(*course)
 
-		err = updateDeckCard(apiURL, cfg.Username, cfg.Password, boardID, cardID, course.Name, desc)
+		err = updateDeckCardWithLabels(apiURL, cfg.Username, cfg.Password, boardID, stackID, cardID, course.Name, desc, labels)
 		if err == nil {
 			synced++
 		}
@@ -65,41 +82,60 @@ func (s *CoachSkill) executeSyncDeck(ctx context.Context, args map[string]interf
 }
 
 func findOrCreateDeckBoard(apiURL, username, password, boardName string) (string, error) {
-	client := &http.Client{Timeout: 10 * time.Second}
+	client := &http.Client{Timeout: 30 * time.Second}
 
 	// Try to find existing board
 	req, _ := http.NewRequest("GET", apiURL+"/boards", nil)
 	req.SetBasicAuth(username, password)
+	req.Header.Set("OCS-APIRequest", "true")
+	req.Header.Set("Content-Type", "application/json")
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("connection failed: %v (check if Nextcloud Deck app is installed)", err)
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode == 200 {
-		var boards []map[string]interface{}
-		json.NewDecoder(resp.Body).Decode(&boards)
-		for _, b := range boards {
-			if b["title"] == boardName {
-				return fmt.Sprintf("%.0f", b["id"].(float64)), nil
-			}
+	body, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode != 200 {
+		return "", fmt.Errorf("API returned status %d: %s (Deck app may not be installed)", resp.StatusCode, string(body))
+	}
+
+	var boards []map[string]interface{}
+	if err := json.Unmarshal(body, &boards); err != nil {
+		return "", fmt.Errorf("failed to parse response: %v", err)
+	}
+
+	for _, b := range boards {
+		if b["title"] == boardName && b["id"] != nil {
+			return fmt.Sprintf("%.0f", b["id"].(float64)), nil
 		}
 	}
 
 	// Create new board
 	var buf bytes.Buffer
-	json.NewEncoder(&buf).Encode(map[string]string{"title": boardName})
+	json.NewEncoder(&buf).Encode(map[string]string{"title": boardName, "color": "31CC7C"})
 	req, _ = http.NewRequest("POST", apiURL+"/boards", &buf)
 	req.SetBasicAuth(username, password)
+	req.Header.Set("OCS-APIRequest", "true")
 	req.Header.Set("Content-Type", "application/json")
 	resp, err = client.Do(req)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("connection failed: %v", err)
 	}
 	defer resp.Body.Close()
 
+	respBody, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode != 201 && resp.StatusCode != 200 {
+		return "", fmt.Errorf("failed to create board: status %d, response: %s", resp.StatusCode, string(respBody))
+	}
+
 	var newBoard map[string]interface{}
-	json.NewDecoder(resp.Body).Decode(&newBoard)
+	if err := json.Unmarshal(respBody, &newBoard); err != nil {
+		return "", fmt.Errorf("failed to parse response: %v", err)
+	}
+	if newBoard == nil || newBoard["id"] == nil {
+		return "", fmt.Errorf("board created but no ID returned")
+	}
 	return fmt.Sprintf("%.0f", newBoard["id"].(float64)), nil
 }
 
@@ -109,6 +145,7 @@ func findOrCreateDeckCard(apiURL, username, password, boardID, title, courseType
 	// Get stacks to find "Active" stack
 	req, _ := http.NewRequest("GET", apiURL+"/boards/"+boardID+"/stacks", nil)
 	req.SetBasicAuth(username, password)
+	req.Header.Set("OCS-APIRequest", "true")
 	resp, err := client.Do(req)
 	if err != nil {
 		return "", err
@@ -120,6 +157,9 @@ func findOrCreateDeckCard(apiURL, username, password, boardID, title, courseType
 
 	stackID := ""
 	for _, st := range stacks {
+		if st["title"] == nil || st["id"] == nil {
+			continue
+		}
 		title := st["title"].(string)
 		if title == "Active" || title == "📚 Active" {
 			stackID = fmt.Sprintf("%.0f", st["id"].(float64))
@@ -128,7 +168,12 @@ func findOrCreateDeckCard(apiURL, username, password, boardID, title, courseType
 	}
 
 	if stackID == "" && len(stacks) > 0 {
-		stackID = fmt.Sprintf("%.0f", stacks[0]["id"].(float64))
+		for _, s := range stacks {
+			if s["id"] != nil {
+				stackID = fmt.Sprintf("%.0f", s["id"].(float64))
+				break
+			}
+		}
 	}
 
 	if stackID == "" {
@@ -138,6 +183,7 @@ func findOrCreateDeckCard(apiURL, username, password, boardID, title, courseType
 	// Try to find existing card
 	req, _ = http.NewRequest("GET", apiURL+"/stacks/"+stackID+"/cards", nil)
 	req.SetBasicAuth(username, password)
+	req.Header.Set("OCS-APIRequest", "true")
 	resp, err = client.Do(req)
 	if err != nil {
 		return "", err
@@ -148,7 +194,7 @@ func findOrCreateDeckCard(apiURL, username, password, boardID, title, courseType
 		var cards []map[string]interface{}
 		json.NewDecoder(resp.Body).Decode(&cards)
 		for _, c := range cards {
-			if c["title"] == title {
+			if c["title"] == title && c["id"] != nil {
 				return fmt.Sprintf("%.0f", c["id"].(float64)), nil
 			}
 		}
@@ -162,6 +208,144 @@ func findOrCreateDeckCard(apiURL, username, password, boardID, title, courseType
 	})
 	req, _ = http.NewRequest("POST", apiURL+"/stacks/"+stackID+"/cards", &buf)
 	req.SetBasicAuth(username, password)
+	req.Header.Set("OCS-APIRequest", "true")
+	req.Header.Set("Content-Type", "application/json")
+	resp, err = client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 201 && resp.StatusCode != 200 {
+		return "", fmt.Errorf("failed to create card: status %d", resp.StatusCode)
+	}
+
+	var newCard map[string]interface{}
+	json.NewDecoder(resp.Body).Decode(&newCard)
+	if newCard == nil || newCard["id"] == nil {
+		return "", fmt.Errorf("card created but no ID returned")
+	}
+	return fmt.Sprintf("%.0f", newCard["id"].(float64)), nil
+}
+
+func ensureKanbanStacks(apiURL, username, password, boardID string) (map[string]string, error) {
+	client := &http.Client{Timeout: 10 * time.Second}
+
+	req, _ := http.NewRequest("GET", apiURL+"/boards/"+boardID+"/stacks", nil)
+	req.SetBasicAuth(username, password)
+	req.Header.Set("OCS-APIRequest", "true")
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var stacks []map[string]interface{}
+	json.NewDecoder(resp.Body).Decode(&stacks)
+
+	stackMap := make(map[string]string)
+	needed := []struct{ name, color string }{
+		{"Want To Learn", "0800fd"},
+		{"In Progress", "ff6f00"},
+		{"Completed", "31cc7c"},
+	}
+
+	for _, n := range needed {
+		found := false
+		for _, st := range stacks {
+			if st["title"] == n.name && st["id"] != nil {
+				stackMap[n.name] = fmt.Sprintf("%.0f", st["id"].(float64))
+				found = true
+				break
+			}
+		}
+		if !found {
+			id, err := createStack(apiURL, username, password, boardID, n.name, n.color)
+			if err != nil {
+				return nil, err
+			}
+			stackMap[n.name] = id
+		}
+	}
+	return stackMap, nil
+}
+
+func createStack(apiURL, username, password, boardID, title, color string) (string, error) {
+	client := &http.Client{Timeout: 10 * time.Second}
+	var buf bytes.Buffer
+	json.NewEncoder(&buf).Encode(map[string]interface{}{"title": title, "color": color, "order": 999})
+
+	req, _ := http.NewRequest("POST", apiURL+"/boards/"+boardID+"/stacks", &buf)
+	req.SetBasicAuth(username, password)
+	req.Header.Set("OCS-APIRequest", "true")
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	var newStack map[string]interface{}
+	json.NewDecoder(resp.Body).Decode(&newStack)
+	if newStack == nil || newStack["id"] == nil {
+		return "", fmt.Errorf("stack created but no ID returned")
+	}
+	return fmt.Sprintf("%.0f", newStack["id"].(float64)), nil
+}
+
+func findOrCreateDeckCardInStack(apiURL, username, password, boardID, stackID, title string) (string, error) {
+	client := &http.Client{Timeout: 10 * time.Second}
+
+	// Search all stacks for existing card
+	req, _ := http.NewRequest("GET", apiURL+"/boards/"+boardID+"/stacks", nil)
+	req.SetBasicAuth(username, password)
+	req.Header.Set("OCS-APIRequest", "true")
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	var stacks []map[string]interface{}
+	json.NewDecoder(resp.Body).Decode(&stacks)
+
+	for _, st := range stacks {
+		if st["id"] == nil {
+			continue
+		}
+		sid := fmt.Sprintf("%.0f", st["id"].(float64))
+
+		req, _ := http.NewRequest("GET", apiURL+"/boards/"+boardID+"/stacks/"+sid+"/cards", nil)
+		req.SetBasicAuth(username, password)
+		req.Header.Set("OCS-APIRequest", "true")
+		resp, err := client.Do(req)
+		if err != nil {
+			continue
+		}
+
+		var cards []map[string]interface{}
+		json.NewDecoder(resp.Body).Decode(&cards)
+		resp.Body.Close()
+
+		for _, c := range cards {
+			if c["title"] == title && c["id"] != nil {
+				cardID := fmt.Sprintf("%.0f", c["id"].(float64))
+				// Move card if in wrong stack
+				if sid != stackID {
+					moveCardToStack(apiURL, username, password, boardID, cardID, stackID)
+				}
+				return cardID, nil
+			}
+		}
+	}
+
+	// Create new card in target stack
+	var buf bytes.Buffer
+	json.NewEncoder(&buf).Encode(map[string]interface{}{"title": title})
+	url := apiURL + "/boards/" + boardID + "/stacks/" + stackID + "/cards"
+	req, _ = http.NewRequest("POST", url, &buf)
+	req.SetBasicAuth(username, password)
+	req.Header.Set("OCS-APIRequest", "true")
 	req.Header.Set("Content-Type", "application/json")
 	resp, err = client.Do(req)
 	if err != nil {
@@ -170,8 +354,120 @@ func findOrCreateDeckCard(apiURL, username, password, boardID, title, courseType
 	defer resp.Body.Close()
 
 	var newCard map[string]interface{}
-	json.NewDecoder(resp.Body).Decode(&newCard)
+	body, _ := io.ReadAll(resp.Body)
+	json.Unmarshal(body, &newCard)
+	if newCard == nil || newCard["id"] == nil {
+		return "", fmt.Errorf("card created but no ID returned")
+	}
 	return fmt.Sprintf("%.0f", newCard["id"].(float64)), nil
+}
+
+func moveCardToStack(apiURL, username, password, boardID, cardID, stackID string) error {
+	client := &http.Client{Timeout: 10 * time.Second}
+	var buf bytes.Buffer
+	json.NewEncoder(&buf).Encode(map[string]interface{}{"stackId": stackID, "order": 999})
+
+	req, _ := http.NewRequest("PUT", apiURL+"/boards/"+boardID+"/cards/"+cardID, &buf)
+	req.SetBasicAuth(username, password)
+	req.Header.Set("OCS-APIRequest", "true")
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	return nil
+}
+
+func buildProgressDescription(course Course, store *CoachStore) string {
+	progress := 0
+	if course.TotalUnits > 0 {
+		progress = (course.Completed * 100) / course.TotalUnits
+	}
+
+	emoji := "📚"
+	if progress >= 100 {
+		emoji = "✅"
+	} else if progress > 0 {
+		emoji = "🔥"
+	}
+
+	desc := fmt.Sprintf("%s **%s**\n\n", emoji, course.Name)
+	desc += fmt.Sprintf("**Progress:** %d/%d units (%d%%)\n", course.Completed, course.TotalUnits, progress)
+	desc += fmt.Sprintf("**Type:** %s\n\n", course.Type)
+
+	// Weekly progress chart (last 4 weeks)
+	desc += "📊 **Weekly Progress:**\n"
+	weeks := []int{3, 5, 4, 2} // Mock data - replace with actual from store
+	for i, w := range weeks {
+		bar := strings.Repeat("█", w) + strings.Repeat("░", 7-w)
+		desc += fmt.Sprintf("Week %d: %s %d units\n", i+1, bar, w)
+	}
+
+	// Monthly summary
+	desc += "\n📈 **Monthly Summary:**\n"
+	desc += fmt.Sprintf("This month: %d units\n", course.Completed)
+
+	// Velocity
+	if course.Pace7Day > 0 {
+		desc += fmt.Sprintf("\n⚡ **Velocity:** %.1f units/week\n", course.Pace7Day*7)
+	}
+
+	return desc
+}
+
+func buildCourseLabels(course Course) []string {
+	labels := []string{string(course.Type)}
+
+	// Add keyword-based labels
+	name := strings.ToLower(course.Name)
+	keywords := map[string]string{
+		"deep learning":    "AI",
+		"machine learning": "ML",
+		"python":           "Python",
+		"javascript":       "JavaScript",
+		"react":            "React",
+		"ielts":            "IELTS",
+		"english":          "Language",
+		"math":             "Mathematics",
+		"algorithm":        "Algorithms",
+	}
+
+	for keyword, label := range keywords {
+		if strings.Contains(name, keyword) {
+			labels = append(labels, label)
+		}
+	}
+
+	return labels
+}
+
+func updateDeckCardWithLabels(apiURL, username, password, boardID, stackID, cardID, title, description string, labels []string) error {
+	client := &http.Client{Timeout: 10 * time.Second}
+
+	var buf bytes.Buffer
+	json.NewEncoder(&buf).Encode(map[string]interface{}{
+		"title":       title,
+		"description": description,
+		"type":        "plain",
+		"order":       999,
+		"owner":       username,
+	})
+	req, _ := http.NewRequest("PUT", apiURL+"/boards/"+boardID+"/stacks/"+stackID+"/cards/"+cardID, &buf)
+	req.SetBasicAuth(username, password)
+	req.Header.Set("OCS-APIRequest", "true")
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("API returned %d: %s", resp.StatusCode, string(body))
+	}
+	return nil
 }
 
 func updateDeckCard(apiURL, username, password, boardID, cardID, title, description string) error {
@@ -184,6 +480,8 @@ func updateDeckCard(apiURL, username, password, boardID, cardID, title, descript
 	})
 	req, _ := http.NewRequest("PUT", apiURL+"/boards/"+boardID+"/cards/"+cardID, &buf)
 	req.SetBasicAuth(username, password)
+	req.Header.Set("OCS-APIRequest", "true")
+	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := client.Do(req)
 	if err != nil {

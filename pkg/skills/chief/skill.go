@@ -149,7 +149,7 @@ func (s *ChiefSkill) executeMorningBrief(ctx context.Context, args map[string]in
 	brief.WriteString("\n\n")
 
 	brief.WriteString("## 📚 Learning (Coach)\n")
-	brief.WriteString(s.getLearningFile("learning-today.md"))
+	brief.WriteString(s.getLearningBrief())
 	brief.WriteString("\n\n")
 
 	brief.WriteString("---\n**Ready to roll? 🚀**\n")
@@ -216,6 +216,17 @@ func (s *ChiefSkill) getDeadlinesFile() string {
 	return s.readMemoryFile("deadlines-today.md", "- No deadlines file found. Architect hasn't written one yet.\n")
 }
 
+// getLearningBrief reads Coach's learning brief file.
+func (s *ChiefSkill) getLearningBrief() string {
+	// First try the new learning-brief.md from Coach
+	content := s.readMemoryFile("learning-brief.md", "")
+	if content != "" && !strings.Contains(content, "not yet configured") {
+		return content
+	}
+	// Fallback to legacy learning-today.md
+	return s.readMemoryFile("learning-today.md", "- No learning data (Coach not yet configured).\n")
+}
+
 // getLearningFile reads Coach-written learning files by name.
 func (s *ChiefSkill) getLearningFile(name string) string {
 	return s.readMemoryFile(name, "- No learning data (Coach not yet configured).\n")
@@ -262,7 +273,7 @@ func (s *ChiefSkill) executeEveningReview(ctx context.Context, args map[string]i
 	review.WriteString("\n\n")
 
 	review.WriteString("## 📚 Learning (Coach)\n")
-	review.WriteString(s.getLearningFile("learning-today.md"))
+	review.WriteString(s.getLearningBrief())
 	review.WriteString("\n\n")
 
 	review.WriteString("## 📊 Productivity Stats (ATC)\n")

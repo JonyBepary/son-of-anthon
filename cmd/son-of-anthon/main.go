@@ -128,7 +128,7 @@ Available tools (call as needed, including multiple times in one session):
 - architect: Life admin; CalDAV sync/create/delete tasks on Nextcloud. Commands: sync_deadlines, create_task, delete_task
 - chief: Strategic commander; reads daily briefs, urgent deadlines, morning/evening summaries. Commands: morning_brief, evening_review, urgent_deadlines, status, delegate
 - atc: Task management; reads/writes tasks.xml, daily priorities. Commands: analyze_tasks, read_calendar, update_task, roll_over_tasks, sync_calendar, push_task
-- coach: Learning coach; IELTS prep, habit tracking, Nextcloud integration. Commands: check_habits, fetch_material, generate_practice, evening_review, update_deck, nudge_telegram
+- coach: Learning coach; course tracking, progress logging, Nextcloud Deck/Tasks/Calendar sync. Commands: add_course, my_courses, progress, weekly, log_progress, estimate_finish, sync_deck, sync_tasks, sync_calendar
 - monitor: News curation; Bangladesh + Tech RSS feeds. Commands: fetch, status, feeds
 - research: Academic paper discovery from ArXiv and HuggingFace. Commands: fetch
 - subagent: Spawn any of the above as a dedicated subagent with deeper context
@@ -277,7 +277,7 @@ Available tools (call as needed, including multiple times in one session):
 - architect: Life admin; CalDAV sync/create/delete tasks on Nextcloud. Commands: sync_deadlines, create_task, delete_task
 - chief: Strategic commander; reads daily briefs, urgent deadlines, morning/evening summaries. Commands: morning_brief, evening_review, urgent_deadlines, status, delegate
 - atc: Task management; reads/writes tasks.xml, daily priorities. Commands: analyze_tasks, read_calendar, update_task, roll_over_tasks, sync_calendar, push_task
-- coach: Learning coach; IELTS prep, habit tracking, Nextcloud integration. Commands: check_habits, fetch_material, generate_practice, evening_review, update_deck, nudge_telegram
+- coach: Learning coach; course tracking, progress logging, Nextcloud Deck/Tasks/Calendar sync. Commands: add_course, my_courses, progress, weekly, log_progress, estimate_finish, sync_deck, sync_tasks, sync_calendar
 - monitor: News curation; Bangladesh + Tech RSS feeds. Commands: fetch, status, feeds
 - research: Academic paper discovery from ArXiv and HuggingFace. Commands: fetch
 - subagent: Spawn any of the above as a dedicated subagent with deeper context

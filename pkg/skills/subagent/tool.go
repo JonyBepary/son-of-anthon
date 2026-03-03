@@ -34,7 +34,7 @@ func (t *SubagentTool) Description() string {
 	return fmt.Sprintf(`Execute a subagent task with agent-specific context. Available agent types:
 - chief: Strategic commander, orchestrates other agents
 - architect: Life admin, bills, medicine tracking  
-- coach: Learning coach, IELTS prep, habit tracking
+- coach: Learning coach, course tracking, progress logging
 - monitor: News curation, Bangladesh + Tech news
 - research: ArXiv/HuggingFace paper discovery
 - atc: Task management, daily priorities

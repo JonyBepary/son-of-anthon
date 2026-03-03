@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -51,7 +52,7 @@ Commands:
 - weekly: Show this week's learning stats
 - log_progress: Mark chapters/videos as completed
 - estimate_finish: Calculate ETA based on current pace
-- sync_deck: Sync courses to Nextcloud Deck
+- sync_deck: Sync courses to Nextcloud Deck (Kanban: Want To Learn → In Progress → Completed)
 - sync_tasks: Sync units to Nextcloud Tasks (CalDAV)
 - sync_calendar: Sync study sessions to Nextcloud Calendar
 
@@ -72,7 +73,7 @@ func (s *CoachSkill) Parameters() map[string]interface{} {
 			"command": map[string]interface{}{
 				"type":        "string",
 				"description": "Command to execute",
-				"enum":        []string{"add_course", "my_courses", "progress", "weekly", "log_progress", "estimate_finish", "sync_deck", "sync_tasks", "sync_calendar"},
+				"enum":        []string{"add_course", "my_courses", "progress", "weekly", "log_progress", "estimate_finish", "sync_deck", "sync_tasks", "sync_calendar", "handle_natural", "brief"},
 			},
 			"course_name": map[string]interface{}{
 				"type":        "string",
@@ -94,6 +95,10 @@ func (s *CoachSkill) Parameters() map[string]interface{} {
 			"completed_units": map[string]interface{}{
 				"type":        "string",
 				"description": "Units to mark as completed (e.g., '5' or '1-5')",
+			},
+			"natural_input": map[string]interface{}{
+				"type":        "string",
+				"description": "Natural language input to parse (e.g., 'finished chapter 5 of deep learning', 'add new python course with 20 videos')",
 			},
 		},
 		"required": []string{"command"},
@@ -185,6 +190,10 @@ func (s *CoachSkill) Execute(ctx context.Context, args map[string]interface{}) *
 		return s.executeSyncTasks(ctx, args)
 	case "sync_calendar":
 		return s.executeSyncCalendar(ctx, args)
+	case "handle_natural":
+		return s.executeHandleNatural(ctx, args)
+	case "brief":
+		return s.executeBrief(ctx, args)
 	default:
 		return tools.ErrorResult(fmt.Sprintf("Unknown command: %s", command))
 	}
@@ -250,17 +259,32 @@ func (s *CoachSkill) executeAddCourse(ctx context.Context, args map[string]inter
 		return tools.ErrorResult(fmt.Sprintf("Failed to create course: %v", err))
 	}
 
-	// Add units if provided
-	for i, title := range units {
-		unit := &Unit{
-			ID:       fmt.Sprintf("unit-%d-%d", now.Unix(), i),
-			CourseID: course.ID,
-			Index:    i + 1,
-			Title:    title,
-			Duration: 30, // default 30 min
-			Status:   "pending",
+	// Add units if provided, or auto-generate placeholder units
+	if len(units) == 0 && totalUnits > 0 {
+		// Auto-generate placeholder units
+		for i := 1; i <= totalUnits; i++ {
+			unit := &Unit{
+				ID:       fmt.Sprintf("unit-%d-%d", now.Unix(), i),
+				CourseID: course.ID,
+				Index:    i,
+				Title:    fmt.Sprintf("Unit %d", i),
+				Duration: 30,
+				Status:   "pending",
+			}
+			s.store.AddUnit(unit)
 		}
-		s.store.AddUnit(unit)
+	} else {
+		for i, title := range units {
+			unit := &Unit{
+				ID:       fmt.Sprintf("unit-%d-%d", now.Unix(), i),
+				CourseID: course.ID,
+				Index:    i + 1,
+				Title:    title,
+				Duration: 30, // default 30 min
+				Status:   "pending",
+			}
+			s.store.AddUnit(unit)
+		}
 	}
 
 	return &tools.ToolResult{
@@ -432,6 +456,281 @@ func (s *CoachSkill) executeEstimateFinish(ctx context.Context, args map[string]
 	return &tools.ToolResult{
 		ForUser: fmt.Sprintf("📅 %s\nPace: %.1f units/day\nETA: %s", progress["course"], pace, eta),
 		ForLLM:  fmt.Sprintf("ETA: %s", eta),
+	}
+}
+
+func (s *CoachSkill) executeHandleNatural(ctx context.Context, args map[string]interface{}) *tools.ToolResult {
+	if s.store == nil {
+		return tools.ErrorResult("Coach store not initialized")
+	}
+
+	input, _ := args["natural_input"].(string)
+	if input == "" {
+		return tools.ErrorResult("natural_input required")
+	}
+
+	input = strings.ToLower(input)
+
+	// Detect intent and extract parameters
+	switch {
+	// Add course patterns
+	case strings.Contains(input, "add") && (strings.Contains(input, "course") || strings.Contains(input, "book") || strings.Contains(input, "video")):
+		return s.parseAddCourse(ctx, input)
+	// Progress/log completion patterns
+	case strings.Contains(input, "finish") || strings.Contains(input, "completed") || strings.Contains(input, "done") || strings.Contains(input, "chapter") || strings.Contains(input, "video") || strings.Contains(input, "unit"):
+		return s.parseLogProgress(ctx, input)
+	// Progress check patterns
+	case strings.Contains(input, "progress") || strings.Contains(input, "how far") || strings.Contains(input, "how much"):
+		return s.parseProgress(ctx, input)
+	// ETA patterns
+	case strings.Contains(input, "eta") || strings.Contains(input, "when will") || strings.Contains(input, "finish"):
+		return s.parseEstimateFinish(ctx, input)
+	// List courses
+	case strings.Contains(input, "what am i") || strings.Contains(input, "my courses") || strings.Contains(input, "studying"):
+		return s.executeMyCourses(ctx, args)
+	// Weekly stats
+	case strings.Contains(input, "week") || strings.Contains(input, "weekly"):
+		return s.executeWeekly(ctx, args)
+	// Sync patterns
+	case strings.Contains(input, "sync"):
+		return s.parseSync(ctx, input)
+	default:
+		// Default to listing courses
+		return s.executeMyCourses(ctx, args)
+	}
+}
+
+func (s *CoachSkill) parseAddCourse(ctx context.Context, input string) *tools.ToolResult {
+	// Extract course name - look for pattern "add [name] course" or "new [name]"
+	var courseName string
+	var courseType string = "book"
+
+	// Detect type
+	if strings.Contains(input, "video") || strings.Contains(input, "youtube") {
+		courseType = "video"
+	} else if strings.Contains(input, "course") {
+		courseType = "custom"
+	}
+
+	// Extract name - patterns: "add [name]", "new [name]", "[name] course"
+	patterns := []string{
+		`add\s+(.+?)(?:\s+course|\s+book|\s+video|$)`,
+		`new\s+(.+?)(?:\s+course|\s+book|\s+video|$)`,
+		`(.+?)\s+(?:course|book|video)`,
+	}
+
+	for _, pattern := range patterns {
+		re := regexp.MustCompile(pattern)
+		matches := re.FindStringSubmatch(input)
+		if len(matches) > 1 {
+			courseName = strings.TrimSpace(matches[1])
+			break
+		}
+	}
+
+	// Extract total units if mentioned
+	totalUnits := 0
+	unitPatterns := []string{
+		`(\d+)\s*(?:chapters?|videos?|units?)`,
+		`(\d+)\s*total`,
+	}
+	for _, pattern := range unitPatterns {
+		re := regexp.MustCompile(pattern)
+		matches := re.FindStringSubmatch(input)
+		if len(matches) > 1 {
+			fmt.Sscanf(matches[1], "%d", &totalUnits)
+			break
+		}
+	}
+
+	if courseName == "" {
+		return tools.ErrorResult("Could not extract course name. Use: add_course command with course_name parameter")
+	}
+
+	// Default total units if not specified
+	if totalUnits == 0 {
+		totalUnits = 10
+	}
+
+	args := map[string]interface{}{
+		"course_name": courseName,
+		"course_type": courseType,
+		"total_units": float64(totalUnits),
+	}
+
+	return s.executeAddCourse(ctx, args)
+}
+
+func (s *CoachSkill) parseLogProgress(ctx context.Context, input string) *tools.ToolResult {
+	// Extract course name - look for active courses and match
+	courses, _ := s.store.GetActiveCourses()
+
+	var courseName string
+	var completedUnits string
+
+	// Try to find course name in input
+	for _, c := range courses {
+		if strings.Contains(input, strings.ToLower(c.Name)) {
+			courseName = c.Name
+			break
+		}
+	}
+
+	// Extract units completed
+	unitPatterns := []string{
+		`(\d+)\s*(?:chapters?|videos?|units?)`,
+		`chapter\s*(\d+)`,
+		`video\s*(\d+)`,
+		`unit\s*(\d+)`,
+		`finished\s*(?:chapter\s*)?(\d+)`,
+		`completed\s*(\d+)`,
+	}
+
+	for _, pattern := range unitPatterns {
+		re := regexp.MustCompile(pattern)
+		matches := re.FindStringSubmatch(input)
+		if len(matches) > 1 {
+			completedUnits = matches[1]
+			break
+		}
+	}
+
+	// Handle range like "1-5"
+	if strings.Contains(input, "-") {
+		parts := strings.Split(input, "-")
+		for _, p := range parts {
+			if re := regexp.MustCompile(`(\d+)`); re.MatchString(p) {
+				m := re.FindStringSubmatch(p)
+				if completedUnits == "" {
+					completedUnits = m[1]
+				} else {
+					completedUnits = completedUnits + "-" + m[1]
+				}
+			}
+		}
+	}
+
+	if courseName == "" {
+		return tools.ErrorResult("Could not identify course. Specify course_name when using log_progress")
+	}
+
+	if completedUnits == "" {
+		return tools.ErrorResult("Could not extract completed units. Use: log_progress with completed_units parameter")
+	}
+
+	args := map[string]interface{}{
+		"course_name":     courseName,
+		"completed_units": completedUnits,
+	}
+
+	return s.executeLogProgress(ctx, args)
+}
+
+func (s *CoachSkill) parseProgress(ctx context.Context, input string) *tools.ToolResult {
+	courses, _ := s.store.GetActiveCourses()
+
+	var courseName string
+	for _, c := range courses {
+		if strings.Contains(input, strings.ToLower(c.Name)) {
+			courseName = c.Name
+			break
+		}
+	}
+
+	if courseName == "" {
+		return s.executeMyCourses(ctx, map[string]interface{}{})
+	}
+
+	args := map[string]interface{}{
+		"course_name": courseName,
+	}
+	return s.executeProgress(ctx, args)
+}
+
+func (s *CoachSkill) parseEstimateFinish(ctx context.Context, input string) *tools.ToolResult {
+	courses, _ := s.store.GetActiveCourses()
+
+	var courseName string
+	for _, c := range courses {
+		if strings.Contains(input, strings.ToLower(c.Name)) {
+			courseName = c.Name
+			break
+		}
+	}
+
+	if courseName == "" {
+		return tools.ErrorResult("Could not identify course for ETA. Specify course_name")
+	}
+
+	args := map[string]interface{}{
+		"course_name": courseName,
+	}
+	return s.executeEstimateFinish(ctx, args)
+}
+
+func (s *CoachSkill) parseSync(ctx context.Context, input string) *tools.ToolResult {
+	if strings.Contains(input, "deck") {
+		return s.executeSyncDeck(ctx, map[string]interface{}{})
+	} else if strings.Contains(input, "task") {
+		return s.executeSyncTasks(ctx, map[string]interface{}{})
+	} else if strings.Contains(input, "calendar") {
+		return s.executeSyncCalendar(ctx, map[string]interface{}{})
+	}
+	// Default sync all
+	result1 := s.executeSyncDeck(ctx, map[string]interface{}{})
+	result2 := s.executeSyncTasks(ctx, map[string]interface{}{})
+	result3 := s.executeSyncCalendar(ctx, map[string]interface{}{})
+
+	return &tools.ToolResult{
+		ForUser: result1.ForUser + "\n" + result2.ForUser + "\n" + result3.ForUser,
+		ForLLM:  "Synced all to Nextcloud",
+	}
+}
+
+func (s *CoachSkill) executeBrief(ctx context.Context, args map[string]interface{}) *tools.ToolResult {
+	if s.store == nil {
+		return tools.ErrorResult("Coach store not initialized")
+	}
+
+	courses, err := s.store.GetActiveCourses()
+	if err != nil || len(courses) == 0 {
+		return &tools.ToolResult{
+			ForUser: "- No active courses. Add one with `add_course` command.",
+			ForLLM:  "No active courses",
+		}
+	}
+
+	var sb strings.Builder
+	sb.WriteString("**Active Courses:**\n")
+
+	for _, c := range courses {
+		progress := float64(c.Completed) / float64(c.TotalUnits) * 100
+		paceStr := fmt.Sprintf("%.1f/day", c.Pace7Day)
+		if c.Pace7Day == 0 {
+			paceStr = "no data"
+		}
+		sb.WriteString(fmt.Sprintf("- %s: %d/%d (%.0f%%), pace: %s\n", c.Name, c.Completed, c.TotalUnits, progress, paceStr))
+	}
+
+	// Add weekly stats
+	weekly, err := s.store.WeeklyStatsJSON()
+	if err == nil && weekly != "" {
+		sb.WriteString(fmt.Sprintf("\n**This Week:** %s", weekly))
+	}
+
+	output := sb.String()
+
+	// Save brief to memory file for Chief to read
+	if s.workspace != "" {
+		memDir := filepath.Join(s.workspace, "memory")
+		os.MkdirAll(memDir, 0755)
+		briefPath := filepath.Join(memDir, "learning-brief.md")
+		os.WriteFile(briefPath, []byte(output), 0644)
+	}
+
+	return &tools.ToolResult{
+		ForUser: output,
+		ForLLM:  output,
 	}
 }
 

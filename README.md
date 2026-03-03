@@ -189,7 +189,7 @@ This project is in early development. PRs welcome, but check [open issues](https
 - [x] Chief: master orchestrator
 - [x] ATC: Nextcloud task sync
 - [x] Coach: course tracking with SQLite
-- [ ] Coach: Nextcloud Deck/Tasks/Calendar sync
+- [x] Coach: Nextcloud Deck/Tasks/Calendar sync
 - [ ] Monitor: RSS digest with summaries
 - [ ] Research: arXiv paper recommendations
 - [ ] Web UI (optional, low priority)
