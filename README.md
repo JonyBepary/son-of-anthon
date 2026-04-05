@@ -1,87 +1,188 @@
-# Son of Anthon ⚠️
+# Son of Anthon
 
 ![Go](https://img.shields.io/badge/Go-1.26+-00ADD8?style=flat&logo=go)
-![License](https://img.shields.io/badge/License-MIT-green)
+![License](https://img.shields.io/badge/License-AGPL--3.0-green)
 ![Status](https://img.shields.io/badge/Status-WIP-orange)
 ![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20Termux%20%7C%20macOS%20%7C%20Windows-lightgrey)
 
-> **WARNING: This project is under active development and NOT production-ready.**
+> **Your Morning Briefing**: "You have 3 tasks due today, your 'Deep Learning' course is 60% complete, and Bangladesh tech stocks are up 2%."
+
+> ⚠️ **WARNING: This project is under active development and NOT production-ready.**
 > Use for testing/development only. APIs, features, and data formats may change.
 
 ---
 
-## What Is Son of Anthon?
+## 🎯 What Is Son of Anthon?
 
-Son of Anthon is a personal AI OS that runs quietly in the background on your machine or phone (Termux). It manages your tasks, learning goals, news, and life admin through a team of specialized AI agents — all coordinated by a master "Chief" agent that briefs you each morning.
+**A local-first AI operating system that manages your life through intelligent agents.**
+
+Unlike cloud-based assistants that own your data, Son of Anthon:
+
+- ✅ Runs entirely on your machine (or phone via Termux)
+- ✅ Syncs with YOUR Nextcloud (not their servers)
+- ✅ Uses your own API keys (no subscription fees)
+- ✅ Sends morning briefings via Telegram when you want them
 
 Your data stays in your own Nextcloud. No third-party cloud storage. You own everything.
 
+Think of it as having a personal Chief of Staff, Learning Coach, and Research Assistant in one system.
+
 ---
 
-## Architecture
+## 🏗️ Architecture
 
 ```mermaid
-graph TD
-    Telegram -->|user message| Chief
+flowchart TD
+    subgraph External["External Services"]
+        Telegram["📱 Telegram"]
+        Nextcloud["☁️ Nextcloud"]
+        Google_News["📰 Google News"]
+        ArXiv["📚 ArXiv"]
+    end
+
+    subgraph Core["Son of Anthon"]
+        Chief["👔 Chief Agent"]
+
+        subgraph Agents["Specialized Agents"]
+            ATC["📋 ATC"]
+            Coach["🎓 Coach"]
+            Architect["🏗️ Architect"]
+            Monitor["📰 Monitor"]
+            Research["🔬 Research"]
+        end
+    end
+
+    Telegram -->|User Input| Chief
     Chief --> ATC
     Chief --> Coach
     Chief --> Architect
     Chief --> Monitor
     Chief --> Research
-    ATC --> Nextcloud_Tasks
-    Coach --> Nextcloud_Deck
-    Coach --> Nextcloud_Calendar
-    Architect --> Nextcloud_Calendar
-    Monitor --> Google_News
-    Research --> ArXiv
+
+    ATC -->|Tasks| Nextcloud
+    Coach -->|Progress| Nextcloud
+    Architect -->|Events| Nextcloud
+    Monitor -->|News| Google_News
+    Research -->|Papers| ArXiv
 ```
 
 ---
 
-## Agents
+## 🤖 Meet Your Agents
 
-| Agent | Role | Integrations |
-|-------|------|--------------|
-| **Chief** | Master orchestrator, morning briefs, delegates to other agents | All agents |
-| **ATC** | Task inbox, create/close tasks, calendar sync | Nextcloud Tasks, CalDAV |
-| **Architect** | Life admin, bills, recurring deadlines | Nextcloud Calendar |
-| **Coach** | Learning tracker, course progress, habit streaks | Nextcloud Deck, Tasks, Calendar |
-| **Monitor** | Curated news digest (Bangladesh, Tech, AI, Finance) | Google News RSS |
-| **Research** | Academic paper discovery | arXiv, Semantic Scholar |
+<details>
+<summary><b>👔 Chief</b> — The Orchestrator</summary>
+
+Your main interface. Sends morning briefings at 7 AM and routes commands to specialists.
+
+**Example**: `@chief Good morning` or `@chief brief me`
+</details>
+
+<details>
+<summary><b>📋 ATC</b> — Task Coordinator</summary>
+
+Manages your task inbox with Nextcloud sync. Create, close, and track tasks.
+
+**Example**: `@atc add_task Fix bug in login flow --due tomorrow`
+</details>
+
+<details>
+<summary><b>🎓 Coach</b> — Learning Tracker</summary>
+
+Tracks courses, books, habits with Nextcloud Deck Kanban boards.
+
+**Example**: `@coach I'm on page 50 of Deep Learning`
+</details>
+
+<details>
+<summary><b>🏗️ Architect</b> — Life Admin</summary>
+
+Handles bills, recurring deadlines, and calendar management.
+
+**Example**: `@architect When is my next bill due?`
+</details>
+
+<details>
+<summary><b>📰 Monitor</b> — News Digest</summary>
+
+Delivers curated news digests (Bangladesh, Tech, AI, Finance).
+
+**Example**: `@monitor news --topic ai --limit 5`
+</details>
+
+<details>
+<summary><b>🔬 Research</b> — Paper Discovery</summary>
+
+Discovers academic papers from arXiv and Semantic Scholar.
+
+**Example**: `@research large language model alignment`
+</details>
 
 ---
 
-## Quick Start
+## ✅ Prerequisites Checklist
 
-### One-Command Setup (All Platforms)
+Before running `onboard`, ensure you have:
+
+- [ ] NVIDIA API key from [build.nvidia.com](https://build.nvidia.com)
+- [ ] Telegram Bot Token from [@BotFather](https://t.me/botfather) (optional)
+- [ ] Nextcloud instance with app-password (optional but recommended)
+
+---
+
+## 🚀 Quick Start
+
+### Option 1: Pre-built Binaries (Recommended)
+
+1. Download from [Releases](https://github.com/JonyBepary/son-of-anthon/releases) for your platform
+2. Run the onboard wizard:
 
 ```bash
-# Download from Releases: https://github.com/JonyBepary/son-of-anthon/releases
-
-# Termux/Proot
-tar -xf son-of-anthon_*_android_arm64.tar
+# Linux/macOS/Termux
+chmod +x son-of-anthon
 ./son-of-anthon onboard --full
 
-# Linux (systemd)
-sudo apt install ./son-of-anthon_*.deb
-
-# macOS
-tar -xf son-of-anthon_*.tar
-./install.sh
-
-# Windows
-Extract zip and run install.bat
+# Windows (PowerShell Admin)
+.\son-of-anthon.exe onboard --full
 ```
 
-Or use the onboard command for automated setup:
+### Option 2: Package Managers
+
 ```bash
-son-of-anthon onboard --full    # Everything at once
-son-of-anthon onboard --status  # Check status
+# Debian/Ubuntu
+sudo dpkg -i son-of-anthon_*.deb
+sudo systemctl enable son-of-anthon
+
+# macOS (extract and install)
+tar -xf son-of-anthon_*.tar
+./install.sh
+```
+
+### Post-Installation
+
+```bash
+# Start the onboarding wizard
+son-of-anthon onboard --full
+
+# Check status
+son-of-anthon onboard --status
 ```
 
 ---
 
-## Configuration
+## 📸 See It In Action
+
+<details>
+<summary>Click to view screenshots</summary>
+
+![Morning Brief](docs/screenshots/brief.png)
+![Coach Kanban](docs/screenshots/kanban.png)
+
+</details>
+
+---
+
+## 📖 Configuration
 
 The config is stored at `~/.picoclaw/config.json` (shares config with PicoClaw framework):
 
@@ -126,18 +227,7 @@ The config is stored at `~/.picoclaw/config.json` (shares config with PicoClaw f
 
 ---
 
-## Requirements
-
-| Dependency | Required | Notes |
-|------------|----------|-------|
-| Go 1.26+ | Dev only | For building from source |
-| NVIDIA API Key | Required | LLM inference via nvidia.com |
-| Telegram Bot Token | Optional | For messaging interface |
-| Nextcloud 27+ | Optional | Tasks, Deck, Calendar sync |
-
----
-
-## Coach Learning Commands
+## 🎓 Coach Learning Commands
 
 Track courses, books, and videos with pace tracking and Kanban visualization:
 
@@ -168,11 +258,12 @@ coach sync_deck
 
 Coach syncs your learning progress to a visual Kanban board with 3 automatic stacks:
 
-- **Want To Learn** (Blue) - Courses with 0% progress
-- **In Progress** (Orange) - Courses with 1-99% progress  
-- **Completed** (Green) - Courses at 100%
+- **Want To Learn** (Blue) — Courses with 0% progress
+- **In Progress** (Orange) — Courses with 1-99% progress
+- **Completed** (Green) — Courses at 100%
 
 Each card shows:
+
 - Progress bars (X/Y units, percentage)
 - Weekly progress charts (text-based bars)
 - Monthly summary and velocity stats
@@ -182,9 +273,10 @@ Cards automatically move between stacks as you make progress. See [docs/DECK_KAN
 
 ---
 
-## News Sources (Monitor)
+## 📰 News Sources (Monitor)
 
 Default curated feeds:
+
 - **Bangladesh**: Prothom Alo, The Daily Star, bdnews24, Google News
 - **World**: Google News (breaking)
 - **AI**: OpenAI, GPT, Gemini, Claude, LLM
@@ -194,7 +286,42 @@ Default curated feeds:
 
 ---
 
-## Contributing
+## 🛠️ Troubleshooting
+
+**"onboard --full hangs on agent setup"**
+→ Check your NVIDIA API key has credits available
+
+**"Telegram bot not responding"**
+→ Verify `allow_from` contains your correct Chat ID (use @userinfobot to get it)
+
+**"Nextcloud sync fails"**
+→ Ensure you're using an App Password, not your main account password
+
+### Logs
+
+```bash
+# View live logs
+son-of-anthon logs --follow
+
+# View recent errors
+son-of-anthon logs --errors
+```
+
+---
+
+## 💡 Pro Tips from Users
+
+> "I set up Coach to track my AWS cert study. The Kanban view in Nextcloud Deck keeps me honest about progress."
+
+---
+
+## 🤝 Contributing
+
+We need help with:
+
+- **Web UI**: React/Vue frontend (low priority but wanted)
+- **New Agents**: Calendar optimization agent, Finance tracker
+- **Testing**: Windows ARM64, macOS Apple Silicon builds
 
 This project is in early development. PRs welcome, but check [open issues](https://github.com/JonyBepary/son-of-anthon/issues) first.
 
@@ -203,7 +330,7 @@ This project is in early development. PRs welcome, but check [open issues](https
 
 ---
 
-## Roadmap
+## 🗺️ Roadmap
 
 - [x] Chief: master orchestrator
 - [x] ATC: Nextcloud task sync
@@ -215,6 +342,6 @@ This project is in early development. PRs welcome, but check [open issues](https
 
 ---
 
-## License
+## 📄 License
 
-MIT
+AGPL-3.0 — See [LICENSE](LICENSE) for details.
