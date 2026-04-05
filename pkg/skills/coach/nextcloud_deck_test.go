@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -356,12 +357,12 @@ func TestDeckBoardUpdatePayload(t *testing.T) {
 }
 
 func TestDeckAPIIntegration(t *testing.T) {
-	host := "https://ivo.lv.tab.digital"
-	username := "sohelahmedjony@gmail.com"
-	password := "GKt42-wrGLE-E2EKK-4fj3y-tQL7B"
+	host := os.Getenv("NEXTCLOUD_HOST")
+	username := os.Getenv("NEXTCLOUD_USERNAME")
+	password := os.Getenv("NEXTCLOUD_PASSWORD")
 
 	if host == "" || username == "" || password == "" {
-		t.Skip("Skipping integration test - no credentials provided")
+		t.Skip("Skipping integration test - set NEXTCLOUD_HOST, NEXTCLOUD_USERNAME, NEXTCLOUD_PASSWORD")
 	}
 
 	apiURL := strings.TrimRight(host, "/") + "/index.php/apps/deck/api/v1.0/"
