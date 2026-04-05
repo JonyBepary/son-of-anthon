@@ -5,8 +5,6 @@
 ![Status](https://img.shields.io/badge/Status-WIP-orange)
 ![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20Termux%20%7C%20macOS%20%7C%20Windows-lightgrey)
 
-> **Your Morning Briefing**: "You have 3 tasks due today, your 'Deep Learning' course is 60% complete, and Bangladesh tech stocks are up 2%."
-
 > ⚠️ **WARNING: This project is under active development and NOT production-ready.**
 > Use for testing/development only. APIs, features, and data formats may change.
 
